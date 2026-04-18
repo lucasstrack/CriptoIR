@@ -1,11 +1,11 @@
 ---
 id: TASK-210
 title: POST /api/wallets/:id/sync + job agendado (node-cron)
-status: ready
+status: done
 wave: 2
 depends_on: [TASK-200]
 parallel_safe_with: [TASK-220, TASK-230]
-owner_dev:
+owner_dev: claude-opus-4-7 (2026-04-18)
 owner_reviewer:
 branch: task/TASK-210-sync-endpoint-cron
 acceptance:

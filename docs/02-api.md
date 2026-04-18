@@ -138,6 +138,35 @@
 
 ---
 
+### `POST /api/wallets/:id/sync`
+
+**Descricao:** dispara sincronizacao da wallet em background (provider + classifier + persistencia). Resposta retorna imediatamente com `syncLogId`; o resultado final e observavel via `SyncLog` e proximas consultas a `GET /api/transactions`.
+
+**Path params:** `id: string (cuid)` — id da wallet.
+
+**Query params:** nenhum.
+
+**Request body:** nenhum.
+
+**Response 202:**
+```json
+{
+  "data": {
+    "syncLogId": "cm9synclog123"
+  },
+  "error": null,
+  "meta": null
+}
+```
+
+**Erros possiveis:** `WALLET_NOT_FOUND`, `SYNC_ALREADY_RUNNING`, `INTERNAL_ERROR`
+
+**Agendamento automatico:** job `node-cron` roda o mesmo caso de uso para todas as wallets nao arquivadas no intervalo `SYNC_CRON_EXPR` (padrao `*/30 * * * *`). Wallets ja em sincronizacao sao puladas.
+
+**Task de origem:** TASK-210
+
+---
+
 > O catalogo sera expandido nas proximas tasks da Onda 1+.
 > Formato padrao de cada entrada abaixo.
 
