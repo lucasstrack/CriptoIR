@@ -5,10 +5,11 @@ Schema Prisma/SQLite. Este documento acompanha `prisma/schema.prisma` e explica 
 ## Entidades
 
 ### `Wallet`
+
 Endereço on-chain cadastrado pelo usuário.
 
 | Campo | Tipo | Observação |
-|---|---|---|
+| --- | --- | --- |
 | id | cuid PK | |
 | label | string | Nome amigável dado pelo usuário |
 | address | string | Endereço on-chain (case-sensitive p/ SOL; lowercase p/ EVM) |
@@ -23,10 +24,11 @@ Endereço on-chain cadastrado pelo usuário.
 ---
 
 ### `Asset`
+
 Ativo (moeda nativa ou token).
 
 | Campo | Tipo | Observação |
-|---|---|---|
+| --- | --- | --- |
 | id | cuid PK | |
 | symbol | string | BTC, ETH, USDC, SOL, ... |
 | name | string | Nome legível |
@@ -40,10 +42,11 @@ Ativo (moeda nativa ou token).
 ---
 
 ### `Transaction`
+
 Transação on-chain relevante para uma `Wallet`.
 
 | Campo | Tipo | Observação |
-|---|---|---|
+| --- | --- | --- |
 | id | cuid PK | |
 | walletId | FK Wallet | |
 | network | enum `Network` | Denormalizado p/ filtros |
@@ -63,6 +66,7 @@ Transação on-chain relevante para uma `Wallet`.
 | createdAt | DateTime | |
 
 **Índices:**
+
 - Único em `(walletId, txHash, direction)` (uma tx pode gerar linhas IN e OUT p/ a mesma wallet em casos internos)
 - `(walletId, timestamp)` p/ listagem/filtro
 - `(network, txHash)` p/ dedup cross-wallet
@@ -70,10 +74,11 @@ Transação on-chain relevante para uma `Wallet`.
 ---
 
 ### `PriceSnapshot`
+
 Preço de um asset em um ponto do tempo.
 
 | Campo | Tipo | Observação |
-|---|---|---|
+| --- | --- | --- |
 | id | cuid PK | |
 | assetId | FK Asset | |
 | date | DateTime | Resolução diária (UTC 00:00) para histórico; intraday para preço atual |
@@ -86,10 +91,11 @@ Preço de um asset em um ponto do tempo.
 ---
 
 ### `PortfolioSnapshot`
+
 Snapshot semanal do patrimônio total (pré-computado p/ gráfico).
 
 | Campo | Tipo | Observação |
-|---|---|---|
+| --- | --- | --- |
 | id | cuid PK | |
 | weekStart | DateTime | Domingo 00:00 UTC |
 | totalUsd | string | |
@@ -101,10 +107,11 @@ Snapshot semanal do patrimônio total (pré-computado p/ gráfico).
 ---
 
 ### `SyncLog`
+
 Auditoria de execuções de sync.
 
 | Campo | Tipo | Observação |
-|---|---|---|
+| --- | --- | --- |
 | id | cuid PK | |
 | walletId | FK Wallet | |
 | startedAt | DateTime | |
