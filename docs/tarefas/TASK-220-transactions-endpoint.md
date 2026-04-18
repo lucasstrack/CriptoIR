@@ -1,11 +1,11 @@
 ---
 id: TASK-220
 title: GET /api/transactions com filtros, paginação e sort
-status: backlog
+status: done
 wave: 2
 depends_on: [TASK-200]
 parallel_safe_with: [TASK-210, TASK-230]
-owner_dev:
+owner_dev: claude-opus-4-7 (2026-04-18)
 owner_reviewer:
 branch: task/TASK-220-transactions-endpoint
 acceptance:

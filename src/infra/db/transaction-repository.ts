@@ -1,4 +1,4 @@
-import type { Direction, Network, Prisma, TxStatus } from '@prisma/client';
+import type { Direction, Network, Prisma, TxStatus, TxType } from '@prisma/client';
 import type { NormalizedTransaction, NormalizedTransfer } from '@/core/domain/normalized-transaction';
 import type { ClassifiedTransaction } from '@/core/services/tx-classifier';
 import { prisma } from '@/infra/db/prisma';
@@ -8,7 +8,76 @@ export type ClassifiedEntry = {
   classification: ClassifiedTransaction;
 };
 
+export type TransactionListFilters = {
+  dateFrom?: Date;
+  dateTo?: Date;
+  network?: Network;
+  assetSymbol?: string;
+  walletId?: string;
+  type?: TxType;
+};
+
+export type TransactionListPagination = {
+  page: number;
+  pageSize: number;
+  sort: 'timestamp:asc' | 'timestamp:desc';
+};
+
+export type TransactionListRow = Prisma.TransactionGetPayload<{
+  include: {
+    asset: true;
+    feeAsset: true;
+    wallet: {
+      select: { id: true; label: true; address: true; network: true };
+    };
+  };
+}>;
+
+export type TransactionListPage = {
+  rows: TransactionListRow[];
+  total: number;
+};
+
 export class TransactionRepository {
+  async list(
+    filters: TransactionListFilters,
+    pagination: TransactionListPagination,
+  ): Promise<TransactionListPage> {
+    const where: Prisma.TransactionWhereInput = {};
+    if (filters.walletId) where.walletId = filters.walletId;
+    if (filters.network) where.network = filters.network;
+    if (filters.type) where.type = filters.type;
+    if (filters.assetSymbol) where.asset = { symbol: filters.assetSymbol };
+    if (filters.dateFrom || filters.dateTo) {
+      where.timestamp = {};
+      if (filters.dateFrom) where.timestamp.gte = filters.dateFrom;
+      if (filters.dateTo) where.timestamp.lte = filters.dateTo;
+    }
+
+    const orderBy: Prisma.TransactionOrderByWithRelationInput = {
+      timestamp: pagination.sort === 'timestamp:asc' ? 'asc' : 'desc',
+    };
+
+    const [rows, total] = await prisma.$transaction([
+      prisma.transaction.findMany({
+        where,
+        orderBy,
+        skip: (pagination.page - 1) * pagination.pageSize,
+        take: pagination.pageSize,
+        include: {
+          asset: true,
+          feeAsset: true,
+          wallet: {
+            select: { id: true, label: true, address: true, network: true },
+          },
+        },
+      }),
+      prisma.transaction.count({ where }),
+    ]);
+
+    return { rows, total };
+  }
+
   async persistBatch(
     walletId: string,
     network: Network,

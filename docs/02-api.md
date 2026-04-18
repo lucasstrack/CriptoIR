@@ -6,6 +6,7 @@
 
 - Base URL local: `http://localhost:3000/api`
 - Todos os endpoints retornam JSON com o envelope:
+
   ```json
   {
     "data": { ... } | [ ... ] | null,
@@ -13,6 +14,7 @@
     "meta": { "page": 1, "pageSize": 50, "total": 1234 } | null
   }
   ```
+  
 - Payloads de request validados com **Zod** (schemas exportados em `src/lib/zod-schemas/`).
 - Valores monetários transmitidos como **string decimal** (ex: `"0.01573000"`), nunca `number`.
 - Datas em **ISO 8601 UTC** (`2026-04-18T14:32:00Z`).
@@ -164,6 +166,72 @@
 **Agendamento automatico:** job `node-cron` roda o mesmo caso de uso para todas as wallets nao arquivadas no intervalo `SYNC_CRON_EXPR` (padrao `*/30 * * * *`). Wallets ja em sincronizacao sao puladas.
 
 **Task de origem:** TASK-210
+
+---
+
+### `GET /api/transactions`
+
+**Descricao:** lista transacoes persistidas com filtros, paginacao e ordenacao. Cada item embute `asset`, `feeAsset` e `wallet` com o minimo necessario para a grid renderizar sem round-trip.
+
+**Path params:** nenhum.
+
+**Query params:**
+
+- `dateFrom` (opcional, `string ISO 8601 UTC`) — inclusivo, filtra `timestamp >= dateFrom`.
+- `dateTo` (opcional, `string ISO 8601 UTC`) — inclusivo, filtra `timestamp <= dateTo`.
+- `network` (opcional, `"BTC" | "ETH" | "BASE" | "ARB" | "SOL"`).
+- `assetSymbol` (opcional, `string`) — match exato no `Asset.symbol`.
+- `walletId` (opcional, `string cuid`).
+- `type` (opcional, `TxType`) — um de `TRANSFER_IN | TRANSFER_OUT | INTERNAL | SWAP | FEE | LIQUIDITY_ADD | LIQUIDITY_REMOVE | STAKING_IN | STAKING_OUT | UNKNOWN`.
+- `page` (opcional, `number`, default `1`, minimo `1`).
+- `pageSize` (opcional, `number`, default `50`, teto `200`).
+- `sort` (opcional, `"timestamp:asc" | "timestamp:desc"`, default `"timestamp:desc"`).
+
+**Request body:** nenhum.
+
+**Response 200:**
+
+```json
+{
+  "data": [
+    {
+      "id": "cm9tx123",
+      "walletId": "cm9wallet123",
+      "network": "ETH",
+      "txHash": "0xabc...",
+      "blockNumber": "19283746",
+      "timestamp": "2026-04-18T14:32:00.000Z",
+      "direction": "IN",
+      "type": "TRANSFER_IN",
+      "counterparty": "0xdead...",
+      "amount": "1.500000000000000000",
+      "feeAmount": null,
+      "status": "CONFIRMED",
+      "asset": {
+        "id": "cm9asset123",
+        "symbol": "ETH",
+        "name": "ETH",
+        "network": "ETH",
+        "contractAddress": null,
+        "decimals": 18
+      },
+      "feeAsset": null,
+      "wallet": {
+        "id": "cm9wallet123",
+        "label": "Carteira principal",
+        "address": "0xabcdef...",
+        "network": "ETH"
+      }
+    }
+  ],
+  "error": null,
+  "meta": { "page": 1, "pageSize": 50, "total": 1234 }
+}
+```
+
+**Erros possiveis:** `VALIDATION_ERROR`, `INTERNAL_ERROR`
+
+**Task de origem:** TASK-220
 
 ---
 
