@@ -14,7 +14,7 @@
     "meta": { "page": 1, "pageSize": 50, "total": 1234 } | null
   }
   ```
-  
+
 - Payloads de request validados com **Zod** (schemas exportados em `src/lib/zod-schemas/`).
 - Valores monetários transmitidos como **string decimal** (ex: `"0.01573000"`), nunca `number`.
 - Datas em **ISO 8601 UTC** (`2026-04-18T14:32:00Z`).
@@ -23,7 +23,7 @@
 ## Códigos de erro padronizados
 
 | Código | HTTP | Significado |
-|---|---|---|
+| --- | --- | --- |
 | `VALIDATION_ERROR` | 400 | Payload inválido (Zod falhou) |
 | `WALLET_NOT_FOUND` | 404 | Wallet id inexistente |
 | `WALLET_ALREADY_EXISTS` | 409 | Par (address, network) já cadastrado |
@@ -48,6 +48,7 @@
 **Request body:** nenhum.
 
 **Response 200:**
+
 ```json
 {
   "data": {
@@ -76,6 +77,7 @@
 **Request body:** nenhum.
 
 **Response 200:**
+
 ```json
 {
   "data": [
@@ -109,6 +111,7 @@
 **Query params:** nenhum.
 
 **Request body:**
+
 ```json
 {
   "label": "Carteira principal",
@@ -118,6 +121,7 @@
 ```
 
 **Response 201:**
+
 ```json
 {
   "data": {
@@ -151,6 +155,7 @@
 **Request body:** nenhum.
 
 **Response 202:**
+
 ```json
 {
   "data": {
@@ -247,14 +252,17 @@
 **Path params:** `id: string (cuid)` — ...
 
 **Query params:**
+
 - `foo` (opcional, `string`) — ...
 
 **Request body:**
+
 ```json
 { "address": "0x...", "network": "ETH", "label": "Minha hot wallet" }
 ```
 
 **Response 200:**
+
 ```json
 { "data": { "id": "...", "address": "...", "network": "ETH", "label": "..." }, "error": null, "meta": null }
 ```
