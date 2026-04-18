@@ -1,13 +1,17 @@
 ---
 id: TASK-000
 title: Scaffolding Next.js + TS + ESLint + Prettier
-status: ready
+status: done
 wave: 0
 depends_on: []
 parallel_safe_with: []
-owner_dev: null
-owner_reviewer: null
-branch: task/TASK-000-scaffold-next
+owner_dev: codex (2026-04-18)
+owner_reviewer: codex (2026-04-18)
+branch: main
+completed_at: 2026-04-18
+notes: |
+  Scaffold consolidado como parte do fechamento completo da Onda 0.
+  Base validada com lint, build e typecheck.
 acceptance:
   - criterion: "package.json existe com next, react, typescript em dependencies/devDependencies"
     verify: "node -e \"const p=require('./package.json'); if(!p.dependencies.next||!p.dependencies.react||!p.devDependencies.typescript) process.exit(1)\""

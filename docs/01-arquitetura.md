@@ -35,7 +35,7 @@ Aplicação web local, single-user, open source, que consolida transações on-c
 |---|---|---|---|
 | BTC | mempool.space | Não | API pública |
 | ETH / BASE / ARB | Alchemy | Sim (gratuita) | Guia de setup em [docs/99-setup-chaves.md](./99-setup-chaves.md) |
-| SOL | Helius | Sim (gratuita) | Guia de setup em [docs/99-setup-chaves.md](./99-setup-chaves.md) |
+| SOL | Helius ou Alchemy | Sim (gratuita) | Helius segue como opção dedicada; Alchemy também pode ser usada para SOL |
 | Preços | CoinGecko | Free tier (chave opcional p/ mais req) | USD e BRL |
 
 `.env.local` (ignorado pelo git) guarda chaves; `.env.example` lista variáveis esperadas.
@@ -126,6 +126,8 @@ CriptoIR/
 
 **Princípio:** `core/` não depende de Next nem Prisma. `infra/` implementa e é injetada. Facilita testes unitários e troca de providers.
 
+Na Onda 1, o contrato comum de redes vive em `src/infra/blockchain/provider.ts`, com transacoes normalizadas em `src/core/domain/normalized-transaction.ts`.
+
 ---
 
 ## 6. Princípios de sincronização
@@ -145,7 +147,7 @@ CriptoIR/
 Detalhado em [04-fluxo-multi-agente.md](./04-fluxo-multi-agente.md). Resumo:
 
 - Specs de tarefa ficam em `docs/tarefas/TASK-XXX.md` com front-matter (status, dependências, critérios de aceite).
-- Script `tools/orchestrator/run.ts` percorre tasks `status: ready`, escolhe as sem dependências pendentes e dispara o agente `dev`.
+- Scripts `tools/orchestrator/*.ts` listam tasks, escolhem a próxima pronta, preparam contexto de review e rodam verificações de aceite.
 - Após commit do dev, dispara agente `reviewer` num checkout limpo.
 - Reviewer escreve resultado no front-matter (`status: approved | changes-requested`) e, se aprovado, marca como `done`.
 
@@ -166,9 +168,6 @@ Ver [05-roadmap.md](./05-roadmap.md).
 
 ---
 
-## 10. Pontos em aberto (aguardando decisão pontual antes do scaffold)
+## 10. Status da fundação
 
-1. **Licença open source** — sugestão default: **MIT** (simples, permissiva). Alternativas: Apache 2.0 (inclui cláusula de patentes) ou GPLv3 (copyleft). Qual prefere?
-2. **Nome do repositório no GitHub** — será `CriptoIR`? Qual seu usuário/organização no GitHub para eu configurar o `remote` e o README?
-
-Depois desses dois, executo a **Onda 0** (scaffold inicial) — essa é a única etapa que instala dependências e cria o `package.json`. Vou pausar antes de rodar `npx create-next-app` para confirmação final.
+A Onda 0 foi concluída com scaffold, base visual, schema Prisma, testes iniciais, endpoint de health, orquestrador local e scripts de validação.

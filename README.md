@@ -2,7 +2,7 @@
 
 Aplicação web local para rastrear transações on-chain de carteiras pessoais e agregar patrimônio em cripto, com grid estilo Excel e gráficos de evolução. Projetada para uso pessoal e auxílio em declaração de imposto de renda.
 
-> **Status:** em desenvolvimento inicial (Onda 0 — fundação).
+> **Status:** Onda 0 concluída.
 
 ## Stack
 
@@ -10,21 +10,47 @@ Aplicação web local para rastrear transações on-chain de carteiras pessoais 
 - Tailwind CSS + shadcn/ui (tema dark)
 - Prisma + SQLite
 - Vitest + Playwright
-- TanStack Table + TanStack Query + Recharts
+- Orquestrador local de tasks para fluxo multi-agente
+
+## Estado atual
+
+Ja disponivel nesta base:
+
+- scaffold Next.js com layout e home inicial
+- tema dark com Tailwind + componentes base
+- Prisma + SQLite com schema inicial e primeira migration
+- endpoint `GET /api/health`
+- Vitest, Playwright e `npm run check`
+- scripts `orch:*` para listar, escolher e verificar tasks
+
+Planejado para a Onda 1:
+
+- CRUD de wallets
+- providers BTC, EVM e SOL
+- sincronizacao incremental de transacoes
+- holdings, historico e telas principais
 
 ## Redes suportadas (v1)
 
 BTC, ETH, BASE, ARB, SOL — arquitetura plugável para novas redes.
 
-## Como rodar (em breve)
-
-Depois que a Onda 0 concluir:
+## Como rodar
 
 ```bash
 npm install
 cp .env.example .env.local   # preencha as chaves (ver docs/99-setup-chaves.md)
-npx prisma migrate dev
+npm run db:migrate
 npm run dev
+```
+
+## Como contribuir
+
+```bash
+npm install
+cp .env.example .env.local
+npm run db:migrate
+npm run check
+npm run check:providers
 ```
 
 ## Documentação

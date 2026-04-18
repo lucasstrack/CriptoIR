@@ -58,7 +58,7 @@ Transação on-chain relevante para uma `Wallet`.
 | feeAmount | string? | |
 | feeAssetId | FK Asset? | Normalmente o nativo da rede |
 | status | enum `TxStatus` | CONFIRMED, PENDING, FAILED |
-| rawPayload | JSON | Resposta bruta do provider; permite reprocessar classificação |
+| rawPayload | string (JSON serializado) | Resposta bruta do provider; permite reprocessar classificação |
 | classificationVersion | int | Versão do classifier que gerou `type` |
 | createdAt | DateTime | |
 
@@ -94,7 +94,7 @@ Snapshot semanal do patrimônio total (pré-computado p/ gráfico).
 | weekStart | DateTime | Domingo 00:00 UTC |
 | totalUsd | string | |
 | totalBrl | string | |
-| breakdown | JSON | `[{ assetId, amount, valueUsd, valueBrl }, ...]` |
+| breakdown | string (JSON serializado) | `[{ assetId, amount, valueUsd, valueBrl }, ...]` |
 
 **Índice:** único em `weekStart`.
 

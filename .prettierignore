@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+build
+dist
+coverage
+package-lock.json
+*.log
+
+# Conteúdo narrativo — não formatar automaticamente
+docs/
+ideia.md
+README.md
+LICENSE

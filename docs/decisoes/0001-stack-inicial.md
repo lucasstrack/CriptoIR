@@ -17,7 +17,7 @@
 - Providers:
   - BTC → mempool.space (público)
   - EVM (ETH/BASE/ARB) → Alchemy (chave gratuita)
-  - SOL → Helius (chave gratuita)
+  - SOL → Helius ou Alchemy (chave gratuita)
   - Preços → CoinGecko (free tier)
 
 ## Consequências

@@ -6,26 +6,32 @@ Este guia é para **você, o usuário final** — ele não é consumido por agen
 
 | Provider | Uso | Grátis? | Obrigatória p/ v1? |
 |---|---|---|---|
-| Alchemy | ETH, BASE, ARB | Sim (limite generoso) | Sim, se quiser sincronizar EVM |
-| Helius | SOL | Sim (limite generoso) | Sim, se quiser sincronizar Solana |
+| Alchemy | ETH, BASE, ARB, SOL | Sim (limite generoso) | Sim para EVM; opcional para SOL |
+| Helius | SOL | Sim (limite generoso) | Opcional |
 | CoinGecko | Preços USD/BRL | Sim sem chave (baixo limite); free tier com chave (maior) | Opcional |
 | mempool.space | BTC | Sim, sem cadastro | Não exige ação |
 
-## 1. Alchemy (ETH, BASE, ARB)
+## 1. Alchemy (ETH, BASE, ARB e opcionalmente SOL)
 
 1. Acesse https://www.alchemy.com e crie uma conta gratuita.
 2. Clique em **"Create new app"**.
-3. Crie três apps separadas (uma por rede):
+3. Crie apps separadas por rede:
    - Chain: **Ethereum**, Network: **Mainnet**
    - Chain: **Base**, Network: **Base Mainnet**
    - Chain: **Arbitrum**, Network: **Arb Mainnet**
+   - Chain: **Solana**, Network: **Mainnet**
 4. Em cada app, copie a **API Key** (ou a URL completa `https://<chain>.g.alchemy.com/v2/<KEY>`).
 5. No projeto, crie um arquivo `.env.local` (na raiz) e adicione:
    ```
    ALCHEMY_ETH_KEY=sua_chave_aqui
    ALCHEMY_BASE_KEY=sua_chave_aqui
    ALCHEMY_ARB_KEY=sua_chave_aqui
+   ALCHEMY_SOL_KEY=sua_chave_aqui
    ```
+
+Você pode usar Alchemy também para SOL. Se preferir manter Helius como provider dedicado para Solana, configure a chave abaixo em paralelo.
+
+Na Onda 1, o factory de provider SOL prioriza `HELIUS_KEY` quando ela estiver presente e usa `ALCHEMY_SOL_KEY` como alternativa.
 
 ## 2. Helius (SOL)
 
@@ -54,7 +60,7 @@ Após configurar, rodar:
 ```
 npm run check:providers
 ```
-(script a ser criado na Onda 1) — faz uma chamada mínima em cada provider e reporta OK/erro.
+O script já existe na base e faz uma chamada mínima em cada provider configurado, reportando OK, falha ou skip quando a chave não estiver presente.
 
 ## Segurança
 

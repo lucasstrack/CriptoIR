@@ -25,6 +25,13 @@ prisma/dev.db*
 *.log
 npm-debug.log*
 
+# Claude Code
+.claude/
+
+# Codex
+.codex/
+.codex
+
 # Editor
 .vscode/
 .idea/

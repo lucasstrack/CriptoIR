@@ -1,12 +1,12 @@
 ---
 id: TASK-005
 title: Orquestrador multi-agente (scripts de list/pick/review/verify)
-status: blocked
+status: done
 wave: 0
 depends_on: [TASK-000]
 parallel_safe_with: [TASK-001, TASK-002, TASK-003]
-owner_dev: null
-owner_reviewer: null
+owner_dev: codex (2026-04-18)
+owner_reviewer: codex (2026-04-18)
 branch: task/TASK-005-orchestrator
 acceptance:
   - criterion: "npm run orch:list imprime tabela de tasks com status"

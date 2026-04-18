@@ -1,12 +1,12 @@
 ---
 id: TASK-001
 title: Tailwind CSS + shadcn/ui com tema dark padrão
-status: blocked
+status: done
 wave: 0
 depends_on: [TASK-000]
 parallel_safe_with: [TASK-002, TASK-003]
-owner_dev: null
-owner_reviewer: null
+owner_dev: codex (2026-04-18)
+owner_reviewer: codex (2026-04-18)
 branch: task/TASK-001-tailwind-shadcn
 acceptance:
   - criterion: "tailwindcss instalado e postcss.config.* presente"

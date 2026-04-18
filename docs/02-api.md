@@ -35,8 +35,111 @@
 
 ## Endpoints
 
-> Catálogo inicial vazio. Será preenchido pelas tasks da Onda 1+.
-> Formato padrão de cada entrada abaixo.
+### `GET /api/health`
+
+**Descricao:** verifica se a app e a camada base de API estao respondendo.
+
+**Path params:** nenhum.
+
+**Query params:** nenhum.
+
+**Request body:** nenhum.
+
+**Response 200:**
+```json
+{
+  "data": {
+    "status": "ok",
+    "timestamp": "2026-04-18T14:32:00Z"
+  },
+  "error": null,
+  "meta": null
+}
+```
+
+**Erros possiveis:** `INTERNAL_ERROR`
+
+**Task de origem:** TASK-004
+
+---
+
+### `GET /api/wallets`
+
+**Descricao:** lista as wallets cadastradas e nao arquivadas.
+
+**Path params:** nenhum.
+
+**Query params:** nenhum.
+
+**Request body:** nenhum.
+
+**Response 200:**
+```json
+{
+  "data": [
+    {
+      "id": "cm9wallet123",
+      "label": "Carteira principal",
+      "address": "0xabcdefabcdefabcdefabcdefabcdefabcdef1234",
+      "network": "ETH",
+      "createdAt": "2026-04-18T14:32:00.000Z",
+      "lastSyncedAt": null,
+      "lastSyncedCursor": null
+    }
+  ],
+  "error": null,
+  "meta": null
+}
+```
+
+**Erros possiveis:** `INTERNAL_ERROR`
+
+**Task de origem:** TASK-100
+
+---
+
+### `POST /api/wallets`
+
+**Descricao:** cadastra uma nova wallet do usuario.
+
+**Path params:** nenhum.
+
+**Query params:** nenhum.
+
+**Request body:**
+```json
+{
+  "label": "Carteira principal",
+  "address": "0xAbCDEFabcdefABCDEFabcdefABCDEFabcdef1234",
+  "network": "ETH"
+}
+```
+
+**Response 201:**
+```json
+{
+  "data": {
+    "id": "cm9wallet123",
+    "label": "Carteira principal",
+    "address": "0xabcdefabcdefabcdefabcdefabcdefabcdef1234",
+    "network": "ETH",
+    "createdAt": "2026-04-18T14:32:00.000Z",
+    "lastSyncedAt": null,
+    "lastSyncedCursor": null
+  },
+  "error": null,
+  "meta": null
+}
+```
+
+**Erros possiveis:** `VALIDATION_ERROR`, `INVALID_ADDRESS`, `WALLET_ALREADY_EXISTS`, `INTERNAL_ERROR`
+
+**Task de origem:** TASK-100
+
+---
+
+> O catalogo sera expandido nas proximas tasks da Onda 1+.
+> Formato padrao de cada entrada abaixo.
 
 ### Template (copie ao adicionar endpoint)
 

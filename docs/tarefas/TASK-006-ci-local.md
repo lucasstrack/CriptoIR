@@ -1,12 +1,12 @@
 ---
 id: TASK-006
 title: Script npm run check (lint + typecheck + test + build)
-status: blocked
+status: done
 wave: 0
 depends_on: [TASK-000, TASK-001, TASK-002, TASK-003, TASK-004]
 parallel_safe_with: []
-owner_dev: null
-owner_reviewer: null
+owner_dev: codex (2026-04-18)
+owner_reviewer: codex (2026-04-18)
 branch: task/TASK-006-ci-local
 acceptance:
   - criterion: "npm run check executa lint, typecheck, test unit/integration e build em sequência e retorna 0"

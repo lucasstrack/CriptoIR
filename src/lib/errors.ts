@@ -1,0 +1,12 @@
+export const ERROR_CODES = [
+  'VALIDATION_ERROR',
+  'WALLET_NOT_FOUND',
+  'WALLET_ALREADY_EXISTS',
+  'INVALID_ADDRESS',
+  'PROVIDER_RATE_LIMITED',
+  'PROVIDER_UNAVAILABLE',
+  'SYNC_ALREADY_RUNNING',
+  'INTERNAL_ERROR',
+] as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[number];

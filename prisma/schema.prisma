@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Wallet {
+  id               String        @id @default(cuid())
+  label            String
+  address          String
+  network          Network
+  createdAt        DateTime      @default(now())
+  lastSyncedAt     DateTime?
+  lastSyncedCursor String?
+  archivedAt       DateTime?
+  transactions     Transaction[]
+  syncLogs         SyncLog[]
+
+  @@unique([network, address])
+}
+
+model Asset {
+  id              String          @id @default(cuid())
+  symbol          String
+  name            String
+  network         Network
+  contractAddress String?
+  decimals        Int
+  coingeckoId     String?
+  transactions    Transaction[]   @relation("TransactionAsset")
+  feeTransactions Transaction[]   @relation("TransactionFeeAsset")
+  priceSnapshots  PriceSnapshot[]
+
+  @@unique([network, contractAddress])
+}
+
+model Transaction {
+  id                    String    @id @default(cuid())
+  walletId              String
+  network               Network
+  txHash                String
+  blockNumber           BigInt
+  timestamp             DateTime
+  direction             Direction
+  type                  TxType
+  counterparty          String?
+  assetId               String
+  amount                String
+  feeAmount             String?
+  feeAssetId            String?
+  status                TxStatus
+  rawPayload            String
+  classificationVersion Int
+  createdAt             DateTime  @default(now())
+  wallet                Wallet    @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  asset                 Asset     @relation("TransactionAsset", fields: [assetId], references: [id])
+  feeAsset              Asset?    @relation("TransactionFeeAsset", fields: [feeAssetId], references: [id])
+
+  @@unique([walletId, txHash, direction])
+  @@index([walletId, timestamp])
+  @@index([network, txHash])
+}
+
+model PriceSnapshot {
+  id         String   @id @default(cuid())
+  assetId    String
+  date       DateTime
+  priceUsd   String
+  priceBrl   String
+  source     String
+  asset      Asset    @relation(fields: [assetId], references: [id])
+
+  @@unique([assetId, date, source])
+}
+
+model PortfolioSnapshot {
+  id        String   @id @default(cuid())
+  weekStart DateTime @unique
+  totalUsd  String
+  totalBrl  String
+  breakdown String
+}
+
+model SyncLog {
+  id         String   @id @default(cuid())
+  walletId   String
+  startedAt  DateTime
+  finishedAt DateTime?
+  txCount    Int
+  error      String?
+  wallet     Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+}
+
+enum Network {
+  BTC
+  ETH
+  BASE
+  ARB
+  SOL
+}
+
+enum Direction {
+  IN
+  OUT
+  INTERNAL
+  SELF
+}
+
+enum TxType {
+  TRANSFER_IN
+  TRANSFER_OUT
+  INTERNAL
+  SWAP
+  FEE
+  LIQUIDITY_ADD
+  LIQUIDITY_REMOVE
+  STAKING_IN
+  STAKING_OUT
+  UNKNOWN
+}
+
+enum TxStatus {
+  CONFIRMED
+  PENDING
+  FAILED
+}

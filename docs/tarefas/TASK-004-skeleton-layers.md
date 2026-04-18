@@ -1,12 +1,12 @@
 ---
 id: TASK-004
 title: Esqueleto das camadas core/infra/ui/lib + API base
-status: blocked
+status: done
 wave: 0
 depends_on: [TASK-000, TASK-002]
 parallel_safe_with: [TASK-001, TASK-003]
-owner_dev: null
-owner_reviewer: null
+owner_dev: codex (2026-04-18)
+owner_reviewer: codex (2026-04-18)
 branch: task/TASK-004-skeleton-layers
 acceptance:
   - criterion: "Pastas src/core, src/infra, src/ui, src/lib existem com README.md curto explicando responsabilidade"

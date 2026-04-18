@@ -1,12 +1,12 @@
 ---
 id: TASK-002
 title: Prisma + SQLite com schema inicial e primeira migration
-status: blocked
+status: done
 wave: 0
 depends_on: [TASK-000]
 parallel_safe_with: [TASK-001, TASK-003]
-owner_dev: null
-owner_reviewer: null
+owner_dev: codex (2026-04-18)
+owner_reviewer: codex (2026-04-18)
 branch: task/TASK-002-prisma-sqlite
 acceptance:
   - criterion: "prisma/schema.prisma existe com datasource sqlite"

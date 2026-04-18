@@ -1,12 +1,12 @@
 ---
 id: TASK-003
 title: Vitest + Playwright com exemplos rodando
-status: blocked
+status: done
 wave: 0
 depends_on: [TASK-000]
 parallel_safe_with: [TASK-001, TASK-002]
-owner_dev: null
-owner_reviewer: null
+owner_dev: codex (2026-04-18)
+owner_reviewer: codex (2026-04-18)
 branch: task/TASK-003-testing
 acceptance:
   - criterion: "vitest, @vitest/coverage-v8, @testing-library/react instalados em devDependencies"
