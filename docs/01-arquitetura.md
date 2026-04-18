@@ -128,6 +128,8 @@ CriptoIR/
 
 Na Onda 1, o contrato comum de redes vive em `src/infra/blockchain/provider.ts`, com transacoes normalizadas em `src/core/domain/normalized-transaction.ts`.
 
+Na Onda 2, o `SyncOrchestrator` (`src/core/services/sync-orchestrator.ts`) consome um `BlockchainProvider` resolvido pelo `ProviderRegistry` (`src/infra/blockchain/provider-registry.ts`), classifica cada transação com o `TxClassifier` e delega a persistência ao `TransactionRepository` (`src/infra/db/transaction-repository.ts`), que mantém a idempotência via índice único `(walletId, txHash, direction)` e faz upsert de `Asset` on-demand. O ciclo de vida (`SyncLog`, atualização de `lastSyncedAt`/`lastSyncedCursor`, tratamento de erro) vive no caso de uso `SyncWalletUseCase` (`src/core/use-cases/sync-wallet.ts`).
+
 ---
 
 ## 6. Princípios de sincronização
@@ -171,3 +173,7 @@ Ver [05-roadmap.md](./05-roadmap.md).
 ## 10. Status da fundação
 
 A Onda 0 foi concluída com scaffold, base visual, schema Prisma, testes iniciais, endpoint de health, orquestrador local e scripts de validação.
+
+A Onda 1 entregou os providers BTC/EVM/SOL, `PriceService`, `TxClassifier` e o CRUD inicial de `Wallet`.
+
+A Onda 2 começou com o `SyncOrchestrator` idempotente (TASK-200): encadeia provider + classifier + persistência transacional por lote, sem endpoint HTTP nem job agendado (delegados a TASK-210).

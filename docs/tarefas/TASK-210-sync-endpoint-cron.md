@@ -1,7 +1,7 @@
 ---
 id: TASK-210
 title: POST /api/wallets/:id/sync + job agendado (node-cron)
-status: backlog
+status: ready
 wave: 2
 depends_on: [TASK-200]
 parallel_safe_with: [TASK-220, TASK-230]

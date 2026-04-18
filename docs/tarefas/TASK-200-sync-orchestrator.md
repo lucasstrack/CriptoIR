@@ -1,11 +1,11 @@
 ---
 id: TASK-200
 title: SyncOrchestrator (providers + classifier, persistência idempotente)
-status: ready
+status: done
 wave: 2
 depends_on: [TASK-100, TASK-110, TASK-111, TASK-112, TASK-120, TASK-130]
 parallel_safe_with: []
-owner_dev:
+owner_dev: claude-opus-4-7 (2026-04-18)
 owner_reviewer:
 branch: task/TASK-200-sync-orchestrator
 acceptance:
