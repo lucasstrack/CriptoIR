@@ -5,7 +5,11 @@ import {
   __resetComputeHoldingsUseCaseForTests,
   __setComputeHoldingsUseCaseForTests,
 } from '@/app/api/holdings/route';
-import { ComputeHoldingsUseCase } from '@/core/use-cases/compute-holdings';
+import {
+  ComputeHoldingsUseCase,
+  __setNowProviderForTests,
+  __resetPriceCacheForTests,
+} from '@/core/use-cases/compute-holdings';
 import { PriceService } from '@/core/services/price-service';
 import { prisma } from '@/infra/db/prisma';
 import { ensureTestSchema } from '@/../tests/integration/helpers/ensure-test-schema';
@@ -367,6 +371,91 @@ describe('GET /api/holdings', () => {
     expect(typeof row.valueBrl).toBe('string');
     // Sem float (tem ponto decimal)
     expect(row.amount).toMatch(/^\d+\.\d+$/);
+  });
+
+  it('cacheia precos por asset dentro do TTL (1 chamada ao PriceService por request consecutivo)', async () => {
+    const wallet = await createWallet('W', '0xw', 'ETH');
+    const eth = await ensureAsset('ETH', 'ETH');
+    await seedTx({
+      wallet,
+      asset: eth,
+      txHash: '0x1',
+      timestamp: '2026-03-01T00:00:00.000Z',
+      type: 'TRANSFER_IN',
+      direction: 'IN',
+      amount: '1',
+    });
+
+    const getCurrentPrice = vi.fn(async (symbol: string) => ({
+      assetSymbol: symbol,
+      priceUsd: '4000',
+      priceBrl: '20000',
+    }));
+    const mockService = { getCurrentPrice } as unknown as PriceService;
+
+    // Controle explicito de tempo via hook DI.
+    let now = 1_000_000;
+    __setNowProviderForTests(() => now);
+    __resetPriceCacheForTests();
+    __setComputeHoldingsUseCaseForTests(new ComputeHoldingsUseCase(mockService));
+
+    // Primeira chamada: cache miss -> bate no PriceService.
+    const r1 = await GET();
+    expect(r1.status).toBe(200);
+    expect(getCurrentPrice).toHaveBeenCalledTimes(1);
+
+    // Avanca 30s (< 60s default TTL): cache hit -> nao bate no PriceService.
+    now += 30_000;
+    const r2 = await GET();
+    expect(r2.status).toBe(200);
+    expect(getCurrentPrice).toHaveBeenCalledTimes(1);
+
+    // Avanca mais 31s (total 61s > TTL): cache expirou -> bate de novo.
+    now += 31_000;
+    const r3 = await GET();
+    expect(r3.status).toBe(200);
+    expect(getCurrentPrice).toHaveBeenCalledTimes(2);
+
+    __setNowProviderForTests(null);
+  });
+
+  it('nao cacheia falhas do PriceService (proximo request tenta de novo)', async () => {
+    const wallet = await createWallet('W', '0xw', 'ETH');
+    const eth = await ensureAsset('ETH', 'ETH');
+    await seedTx({
+      wallet,
+      asset: eth,
+      txHash: '0x1',
+      timestamp: '2026-03-01T00:00:00.000Z',
+      type: 'TRANSFER_IN',
+      direction: 'IN',
+      amount: '1',
+    });
+
+    let shouldFail = true;
+    const getCurrentPrice = vi.fn(async (symbol: string) => {
+      if (shouldFail) {
+        throw new Error('provider down');
+      }
+      return { assetSymbol: symbol, priceUsd: '4000', priceBrl: '20000' };
+    });
+    const mockService = { getCurrentPrice } as unknown as PriceService;
+
+    __resetPriceCacheForTests();
+    __setComputeHoldingsUseCaseForTests(new ComputeHoldingsUseCase(mockService));
+
+    // Primeira chamada: falha — nao cacheia.
+    const r1 = await GET();
+    const p1 = await r1.json();
+    expect(p1.data[0].priceUsd).toBeNull();
+    expect(getCurrentPrice).toHaveBeenCalledTimes(1);
+
+    // Provider volta — proxima chamada tenta de novo e deve suceder.
+    shouldFail = false;
+    const r2 = await GET();
+    const p2 = await r2.json();
+    expect(p2.data[0].priceUsd).toBe('4000');
+    expect(getCurrentPrice).toHaveBeenCalledTimes(2);
   });
 
   it('exclui da lista assets com saldo zero ou negativo', async () => {

@@ -1,4 +1,7 @@
-import { ComputeHoldingsUseCase } from '@/core/use-cases/compute-holdings';
+import {
+  ComputeHoldingsUseCase,
+  __resetPriceCacheForTests,
+} from '@/core/use-cases/compute-holdings';
 import { err, ok } from '@/lib/api-response';
 
 let computeHoldingsUseCase = new ComputeHoldingsUseCase();
@@ -14,8 +17,10 @@ export async function GET() {
 
 export function __setComputeHoldingsUseCaseForTests(useCase: ComputeHoldingsUseCase) {
   computeHoldingsUseCase = useCase;
+  __resetPriceCacheForTests();
 }
 
 export function __resetComputeHoldingsUseCaseForTests() {
   computeHoldingsUseCase = new ComputeHoldingsUseCase();
+  __resetPriceCacheForTests();
 }

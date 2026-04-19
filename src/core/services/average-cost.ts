@@ -1,7 +1,7 @@
-const SCALE = 18;
+export const SCALE = 18;
 const ZERO = BigInt(0);
 const TEN = BigInt(10);
-const SCALE_FACTOR = TEN ** BigInt(SCALE);
+export const SCALE_FACTOR = TEN ** BigInt(SCALE);
 
 export type AcquisitionEntry = {
   amount: string;
@@ -71,7 +71,7 @@ export class AverageCostService {
   }
 }
 
-function parseDecimal(value: string): bigint {
+export function parseDecimal(value: string): bigint {
   const trimmed = value.trim();
   if (trimmed === '') {
     return ZERO;
@@ -93,7 +93,7 @@ function divideScaled(numerator: bigint, denominator: bigint): string {
   return formatDecimal(scaled);
 }
 
-function formatDecimal(value: bigint): string {
+export function formatDecimal(value: bigint): string {
   const negative = value < ZERO;
   const abs = negative ? -value : value;
   const str = abs.toString().padStart(SCALE + 1, '0');

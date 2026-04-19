@@ -1,6 +1,12 @@
 import type { Network } from '@prisma/client';
 import { prisma } from '@/infra/db/prisma';
-import { AverageCostService, type AcquisitionEntry } from '@/core/services/average-cost';
+import {
+  AverageCostService,
+  type AcquisitionEntry,
+  SCALE_FACTOR,
+  parseDecimal,
+  formatDecimal,
+} from '@/core/services/average-cost';
 import { PriceService } from '@/core/services/price-service';
 import { CoinGeckoClient } from '@/infra/prices/coingecko-client';
 import {
@@ -32,10 +38,38 @@ type HoldingComputation = {
   asset: HoldingDTO['asset'];
 };
 
-const SCALE = 18;
 const ZERO = BigInt(0);
-const TEN = BigInt(10);
-const SCALE_FACTOR = TEN ** BigInt(SCALE);
+
+// Cache em memoria (por processo) para precos atuais. Chave: symbol (tupla
+// coingeckoId+currency colapsa em 1 entry porque getCurrentPrice devolve USD e BRL
+// juntos). TTL configuravel via env; default 60s. So cacheia sucesso — erro nao
+// contamina proxima chamada.
+const DEFAULT_PRICE_CACHE_TTL_MS = 60_000;
+
+type CachedPrice = {
+  priceUsd: string;
+  priceBrl: string;
+  expiresAt: number;
+};
+
+const priceCache = new Map<string, CachedPrice>();
+let nowProvider: () => number = () => Date.now();
+
+function getPriceCacheTtlMs(): number {
+  const raw = process.env.HOLDINGS_PRICE_CACHE_TTL_MS;
+  if (!raw) return DEFAULT_PRICE_CACHE_TTL_MS;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_PRICE_CACHE_TTL_MS;
+  return parsed;
+}
+
+export function __resetPriceCacheForTests() {
+  priceCache.clear();
+}
+
+export function __setNowProviderForTests(provider: (() => number) | null) {
+  nowProvider = provider ?? (() => Date.now());
+}
 
 export class ComputeHoldingsUseCase {
   constructor(
@@ -174,38 +208,27 @@ async function safeFetchPrice(
   if (!(symbol in COINGECKO_ASSET_MAP)) {
     return null;
   }
+  const now = nowProvider();
+  const cached = priceCache.get(symbol);
+  if (cached && cached.expiresAt > now) {
+    return { priceUsd: cached.priceUsd, priceBrl: cached.priceBrl };
+  }
   try {
     const price = await priceService.getCurrentPrice(symbol as SupportedPricedAsset);
+    const ttl = getPriceCacheTtlMs();
+    priceCache.set(symbol, {
+      priceUsd: price.priceUsd,
+      priceBrl: price.priceBrl,
+      expiresAt: now + ttl,
+    });
     return { priceUsd: price.priceUsd, priceBrl: price.priceBrl };
   } catch {
     return null;
   }
 }
 
-function parseDecimal(value: string): bigint {
-  const trimmed = value.trim();
-  if (trimmed === '') return ZERO;
-  const negative = trimmed.startsWith('-');
-  const unsigned = negative ? trimmed.slice(1) : trimmed;
-  const [intPart = '0', fracPartRaw = ''] = unsigned.split('.');
-  const fracPart = (fracPartRaw + '0'.repeat(SCALE)).slice(0, SCALE);
-  const combined = `${intPart}${fracPart}`.replace(/^0+/, '') || '0';
-  const result = BigInt(combined);
-  return negative ? -result : result;
-}
-
 function multiplyDecimals(amount: bigint, priceStr: string): string {
   const price = parseDecimal(priceStr);
   const product = (amount * price) / SCALE_FACTOR;
   return formatDecimal(product);
-}
-
-function formatDecimal(value: bigint): string {
-  const negative = value < ZERO;
-  const abs = negative ? -value : value;
-  const str = abs.toString().padStart(SCALE + 1, '0');
-  const intPart = str.slice(0, str.length - SCALE);
-  const fracPart = str.slice(str.length - SCALE);
-  const formatted = `${intPart}.${fracPart}`;
-  return negative ? `-${formatted}` : formatted;
 }
