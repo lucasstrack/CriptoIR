@@ -1,11 +1,11 @@
 ---
 id: TASK-240
 title: Job semanal de PortfolioSnapshot
-status: backlog
+status: in-progress
 wave: 2
 depends_on: [TASK-230]
 parallel_safe_with: []
-owner_dev:
+owner_dev: claude-dev-agent
 owner_reviewer:
 branch: task/TASK-240-portfolio-snapshot
 acceptance:

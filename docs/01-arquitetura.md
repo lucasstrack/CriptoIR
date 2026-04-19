@@ -111,6 +111,8 @@ CriptoIR/
 ├─ tests/
 │  ├─ unit/
 │  └─ integration/
+├─ scripts/
+│  └─ portfolio-snapshot.ts         # backfill manual de PortfolioSnapshot
 ├─ tools/
 │  └─ orchestrator/                 # orquestrador multi-agente
 ├─ docs/
@@ -129,6 +131,8 @@ CriptoIR/
 Na Onda 1, o contrato comum de redes vive em `src/infra/blockchain/provider.ts`, com transacoes normalizadas em `src/core/domain/normalized-transaction.ts`.
 
 Na Onda 2, o `SyncOrchestrator` (`src/core/services/sync-orchestrator.ts`) consome um `BlockchainProvider` resolvido pelo `ProviderRegistry` (`src/infra/blockchain/provider-registry.ts`), classifica cada transação com o `TxClassifier` e delega a persistência ao `TransactionRepository` (`src/infra/db/transaction-repository.ts`), que mantém a idempotência via índice único `(walletId, txHash, direction)` e faz upsert de `Asset` on-demand. O ciclo de vida (`SyncLog`, atualização de `lastSyncedAt`/`lastSyncedCursor`, tratamento de erro) vive no caso de uso `SyncWalletUseCase` (`src/core/use-cases/sync-wallet.ts`).
+
+Ainda na Onda 2, o job `PortfolioSnapshot` (`src/infra/jobs/portfolio-snapshot-cron.ts`) roda semanalmente (domingo 00:00 UTC) via `node-cron`, com expressão default `0 0 * * 0` e override opcional por env `SNAPSHOT_CRON_EXPR`. O cron apenas agenda; a lógica vive no `RecordPortfolioSnapshotUseCase` (`src/core/use-cases/record-portfolio-snapshot.ts`), que recalcula holdings na `weekStart`, resolve preços e persiste em `PortfolioSnapshot` de forma idempotente via upsert pelo índice único em `weekStart`. Para backfill de semanas passadas, o script manual `scripts/portfolio-snapshot.ts` aceita `--week=YYYY-MM-DD` e reusa o mesmo use-case com preços históricos (`PriceSnapshot` mais recente `<= weekStart`).
 
 ---
 
@@ -176,4 +180,4 @@ A Onda 0 foi concluída com scaffold, base visual, schema Prisma, testes iniciai
 
 A Onda 1 entregou os providers BTC/EVM/SOL, `PriceService`, `TxClassifier` e o CRUD inicial de `Wallet`.
 
-A Onda 2 começou com o `SyncOrchestrator` idempotente (TASK-200): encadeia provider + classifier + persistência transacional por lote, sem endpoint HTTP nem job agendado (delegados a TASK-210).
+A Onda 2 começou com o `SyncOrchestrator` idempotente (TASK-200): encadeia provider + classifier + persistência transacional por lote, sem endpoint HTTP nem job agendado (delegados a TASK-210). A onda encerra com TASK-220 (listagem paginada de transações), TASK-230 (holdings + portfolio history) e TASK-240 (job semanal de PortfolioSnapshot + script manual de backfill).
