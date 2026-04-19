@@ -99,12 +99,13 @@ async function ensureMigrationFile(
   }
 }
 
-async function executeMigration(migrationFile: string) {
+async function executeMigration(migrationFile: string, databaseUrl: string) {
   await execaCommand(
-    `npx dotenv -e .env.local -- prisma db execute --file "${migrationFile}" --schema prisma/schema.prisma`,
+    `npx prisma db execute --file "${migrationFile}" --schema prisma/schema.prisma`,
     {
       cwd: process.cwd(),
       shell: true,
+      env: { ...process.env, DATABASE_URL: databaseUrl },
     },
   );
 }
@@ -144,7 +145,7 @@ async function main() {
     return;
   }
 
-  await executeMigration(migrationFile);
+  await executeMigration(migrationFile, databaseUrl);
   console.log(`Migration aplicada em ${databaseFile}`);
 }
 

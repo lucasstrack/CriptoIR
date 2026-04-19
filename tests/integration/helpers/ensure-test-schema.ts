@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execaCommandSync } from 'execa';
+import { resolveDatabaseUrl } from './resolve-database-url';
 
 const migrationFile = path.resolve(
   process.cwd(),
@@ -13,10 +14,11 @@ export function ensureTestSchema() {
 
   if (!fs.existsSync(databaseFile) || fs.statSync(databaseFile).size === 0) {
     execaCommandSync(
-      `npx dotenv -e .env.local -- prisma db execute --file "${migrationFile}" --schema prisma/schema.prisma`,
+      `npx prisma db execute --file "${migrationFile}" --schema prisma/schema.prisma`,
       {
         cwd: process.cwd(),
         shell: true,
+        env: { ...process.env, DATABASE_URL: resolveDatabaseUrl() },
       },
     );
   }
