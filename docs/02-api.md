@@ -240,6 +240,104 @@
 
 ---
 
+### `GET /api/holdings`
+
+**Descricao:** retorna a posicao atual consolidada por `Asset`, calculando saldo liquido (`IN - OUT`), preco medio contabil ponderado por quantidade de aquisicao, e valor atual em USD e BRL. Transacoes com `direction=INTERNAL` (movimentacoes entre wallets proprias) e `type=FEE` sao excluidas do calculo de quantidade. Apenas aquisicoes (`TRANSFER_IN` e lado `IN` de `SWAP`) alimentam o preco medio. O preco medio e **contabil**: nao reseta apos venda total, preservando a base de custo historica. Assets com saldo liquido zero ou negativo nao aparecem na lista.
+
+**Path params:** nenhum.
+
+**Query params:** nenhum.
+
+**Request body:** nenhum.
+
+**Response 200:**
+
+```json
+{
+  "data": [
+    {
+      "asset": {
+        "id": "cm9asseteth",
+        "symbol": "ETH",
+        "name": "ETH",
+        "network": "ETH",
+        "contractAddress": null,
+        "decimals": 18
+      },
+      "amount": "1.500000000000000000",
+      "averagePriceUsd": "3000.000000000000000000",
+      "averagePriceBrl": "15000.000000000000000000",
+      "priceUsd": "4000.00000000",
+      "priceBrl": "20000.00000000",
+      "valueUsd": "6000.000000000000000000",
+      "valueBrl": "30000.000000000000000000"
+    }
+  ],
+  "error": null,
+  "meta": null
+}
+```
+
+**Notas:**
+
+- Todos os valores monetarios sao `string` decimal (nunca `number`).
+- Se o PriceService falhar (provider indisponivel) ou o asset nao estiver no mapa suportado, `priceUsd`, `priceBrl`, `valueUsd` e `valueBrl` retornam `null` **sem derrubar o endpoint**.
+- `averagePriceUsd`/`averagePriceBrl` retornam `null` quando nenhuma aquisicao tem `PriceSnapshot` historico disponivel.
+- Aquisicoes sem `PriceSnapshot` sao ignoradas no numerador/denominador da media (best-effort), mas contam no total adquirido interno.
+
+**Erros possiveis:** `INTERNAL_ERROR`
+
+**Task de origem:** TASK-230
+
+---
+
+### `GET /api/portfolio/history`
+
+**Descricao:** retorna a serie temporal do patrimonio pre-computada, lendo `PortfolioSnapshot` ordenado por `weekStart` ascendente. Nao calcula nada on-the-fly — o snapshot semanal e produzido por job dedicado (TASK-240). Antes do primeiro snapshot, o endpoint retorna lista vazia.
+
+**Path params:** nenhum.
+
+**Query params:** nenhum.
+
+**Request body:** nenhum.
+
+**Response 200:**
+
+```json
+{
+  "data": [
+    {
+      "weekStart": "2026-04-13T00:00:00.000Z",
+      "totalUsd": "15000.00000000",
+      "totalBrl": "75000.00000000",
+      "breakdown": [
+        {
+          "assetId": "cm9asseteth",
+          "symbol": "ETH",
+          "amount": "3.000000000000000000",
+          "valueUsd": "15000.00000000",
+          "valueBrl": "75000.00000000"
+        }
+      ]
+    }
+  ],
+  "error": null,
+  "meta": null
+}
+```
+
+**Notas:**
+
+- `weekStart` em ISO 8601 UTC.
+- `totalUsd`, `totalBrl` e valores dentro de `breakdown` sao `string` decimal.
+- `breakdown` pode vir `[]` se o snapshot tiver payload invalido (defensivo, nao deveria ocorrer na pratica).
+
+**Erros possiveis:** `INTERNAL_ERROR`
+
+**Task de origem:** TASK-230
+
+---
+
 > O catalogo sera expandido nas proximas tasks da Onda 1+.
 > Formato padrao de cada entrada abaixo.
 

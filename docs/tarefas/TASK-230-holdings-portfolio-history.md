@@ -1,11 +1,11 @@
 ---
 id: TASK-230
 title: GET /api/holdings e GET /api/portfolio/history
-status: backlog
+status: in-review
 wave: 2
 depends_on: [TASK-200, TASK-120]
 parallel_safe_with: [TASK-210, TASK-220]
-owner_dev:
+owner_dev: claude-dev-agent
 owner_reviewer:
 branch: task/TASK-230-holdings-portfolio
 acceptance:
