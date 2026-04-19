@@ -44,3 +44,7 @@ Ondas e tasks. Detalhes de cada task ficam em `docs/tarefas/TASK-XXX.md`.
 - Suporte a novas redes (Polygon, Optimism, Avalanche)
 - Export CSV/XLSX das transações
 - Modo multi-usuário (login local)
+
+## Backlog técnico (carry-over de reviews)
+- **Da TASK-240** — registrar `PortfolioSnapshot` cron no bootstrap de `src/infra/jobs/index.ts` (hoje só `sync-cron` é registrado no startup).
+- **Da TASK-240** — adicionar script `snapshot` em `package.json` apontando para `scripts/portfolio-snapshot.ts` (hoje é invocável só via `npx tsx`).
