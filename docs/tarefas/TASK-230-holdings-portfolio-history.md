@@ -1,12 +1,12 @@
 ---
 id: TASK-230
 title: GET /api/holdings e GET /api/portfolio/history
-status: in-review
+status: approved
 wave: 2
 depends_on: [TASK-200, TASK-120]
 parallel_safe_with: [TASK-210, TASK-220]
 owner_dev: claude-dev-agent
-owner_reviewer:
+owner_reviewer: claude-reviewer-agent
 branch: task/TASK-230-holdings-portfolio
 acceptance:
   - criterion: "GET /api/holdings retorna posição atual por asset com amount, preço médio, valor atual USD e BRL"
