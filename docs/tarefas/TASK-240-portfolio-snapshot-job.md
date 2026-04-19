@@ -1,7 +1,7 @@
 ---
 id: TASK-240
 title: Job semanal de PortfolioSnapshot
-status: approved
+status: done
 wave: 2
 depends_on: [TASK-230]
 parallel_safe_with: []
