@@ -1,7 +1,7 @@
 ---
 id: TASK-230
 title: GET /api/holdings e GET /api/portfolio/history
-status: approved
+status: done
 wave: 2
 depends_on: [TASK-200, TASK-120]
 parallel_safe_with: [TASK-210, TASK-220]
