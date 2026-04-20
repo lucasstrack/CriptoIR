@@ -104,8 +104,11 @@ CriptoIR/
 │  │  └─ http/                      # fetch com retry/backoff
 │  ├─ ui/
 │  │  ├─ components/                # shadcn + componentes próprios
-│  │  └─ hooks/
+│  │  ├─ hooks/                     # hooks compartilhados (ex.: useCurrency)
+│  │  ├─ providers/                 # providers client (QueryProvider, ...)
+│  │  └─ stores/                    # stores Zustand (currency-store, ...)
 │  └─ lib/
+│     ├─ i18n/                      # dicionário pt-BR + helper t(key)
 │     ├─ zod-schemas/
 │     └─ errors.ts
 ├─ tests/
@@ -181,3 +184,5 @@ A Onda 0 foi concluída com scaffold, base visual, schema Prisma, testes iniciai
 A Onda 1 entregou os providers BTC/EVM/SOL, `PriceService`, `TxClassifier` e o CRUD inicial de `Wallet`.
 
 A Onda 2 começou com o `SyncOrchestrator` idempotente (TASK-200): encadeia provider + classifier + persistência transacional por lote, sem endpoint HTTP nem job agendado (delegados a TASK-210). A onda encerra com TASK-220 (listagem paginada de transações), TASK-230 (holdings + portfolio history) e TASK-240 (job semanal de PortfolioSnapshot + script manual de backfill).
+
+A Onda 3 (UI principal) começa com a TASK-300, que entrega o shell compartilhado: `src/app/layout.tsx` envolve o `QueryProvider` (TanStack Query com `staleTime` default de 60s) em torno das rotas; `/` faz `permanentRedirect` para `/patrimonio`; o grupo `(dashboard)/` tem `layout.tsx` com `AppNavbar` (Patrimônio, Carteiras, Transações + toggle USD/BRL). O toggle vive em um store Zustand persistido em `localStorage` (`src/ui/stores/currency-store.ts`, chave `criptoir:currency`) e é consumido via `useCurrency()` (`src/ui/hooks/use-currency.ts`). Primitivas visuais reutilizáveis (`Skeleton`, `EmptyState`, `ErrorState`) ficam em `src/ui/components/`; toda string pt-BR é centralizada em `src/lib/i18n/messages.ts` e consumida via `t(key)` tipado (`src/lib/i18n/index.ts`) — estrutura pronta para migrar a `next-intl` no futuro sem tocar call sites.

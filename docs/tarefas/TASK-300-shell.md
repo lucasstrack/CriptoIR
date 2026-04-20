@@ -1,7 +1,7 @@
 ---
 id: TASK-300
 title: Shell da app (layout, navbar, toggle USD/BRL, providers)
-status: ready
+status: in-review
 wave: 3
 depends_on: [TASK-230]
 parallel_safe_with: []
@@ -83,14 +83,14 @@ Entregar a casca de UI compartilhada por toda a Onda 3: layout com navbar, provi
 - `QueryProvider` usa `staleTime: 60_000` por padrão (preços não precisam de refresh agressivo).
 
 ## Progresso
-- [ ] instalar zustand e @tanstack/react-query
-- [ ] infra i18n (messages + helper t(key))
-- [ ] format-currency helper + testes
-- [ ] currency-store (zustand persist) + hook + testes
-- [ ] query-provider + teste smoke
-- [ ] primitivas skeleton/empty-state/error-state
-- [ ] currency-toggle + app-navbar + teste
-- [ ] dashboard layout + páginas placeholder
-- [ ] root layout com QueryProvider + redirect / → /patrimonio + teste
-- [ ] docs/01-arquitetura.md atualizado
-- [ ] verify TASK-300 verde
+- [x] instalar zustand e @tanstack/react-query
+- [x] infra i18n (messages + helper t(key))
+- [x] format-currency helper + testes
+- [x] currency-store (zustand persist) + hook + testes
+- [x] query-provider + teste smoke
+- [x] primitivas skeleton/empty-state/error-state
+- [x] currency-toggle + app-navbar + teste
+- [x] dashboard layout + páginas placeholder
+- [x] root layout com QueryProvider + redirect / → /patrimonio + teste
+- [x] docs/01-arquitetura.md atualizado
+- [x] verify TASK-300 verde
