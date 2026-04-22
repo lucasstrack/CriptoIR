@@ -82,7 +82,7 @@ describe('useSyncWallet', () => {
   });
 
   it('sinaliza estado pendente enquanto fetch nao resolve', async () => {
-    let resolveFetch: ((value: Response) => void) | null = null;
+    let resolveFetch!: (value: Response) => void;
     const pending = new Promise<Response>((resolve) => {
       resolveFetch = resolve;
     });
@@ -97,7 +97,7 @@ describe('useSyncWallet', () => {
       expect(result.current.isPending).toBe(true);
     });
 
-    resolveFetch?.(jsonResponse({ data: { syncLogId: 'log-2' }, error: null, meta: null }, 202));
+    resolveFetch(jsonResponse({ data: { syncLogId: 'log-2' }, error: null, meta: null }, 202));
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);

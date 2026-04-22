@@ -67,8 +67,6 @@ export const ptBR = {
   'wallets.form.error.invalidAddress': 'Endereço inválido para a rede selecionada.',
   'wallets.form.error.duplicate': 'Já existe uma carteira cadastrada com esse endereço nessa rede.',
   'wallets.form.error.generic': 'Não foi possível cadastrar a carteira. Tente novamente.',
-  'wallets.form.error.labelRequired': 'Informe um nome para a wallet.',
-  'wallets.form.error.addressRequired': 'Informe um endereço.',
 } as const;
 
 export type MessageKey = keyof typeof ptBR;
