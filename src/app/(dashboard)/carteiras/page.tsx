@@ -1,11 +1,5 @@
-import { EmptyState } from '@/ui/components/empty-state';
-import { t } from '@/lib/i18n';
+import { WalletList } from '@/ui/features/wallets/wallet-list';
 
 export default function CarteirasPage() {
-  return (
-    <EmptyState
-      title={t('page.placeholder.heading')}
-      description={t('page.placeholder.body')}
-    />
-  );
+  return <WalletList />;
 }
