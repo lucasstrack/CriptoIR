@@ -86,9 +86,9 @@ describe('TransactionsTable', () => {
     expect(screen.getByRole('columnheader', { name: 'Carteira' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Hash' })).toBeInTheDocument();
 
-    // Dados da linha (tx-type aparece tambem nas options do select de filtros — usar seletor especifico)
+    // Dados da linha: tx-type renderiza label traduzido do tipo
     expect(
-      screen.getByText('TRANSFER_IN', { selector: '[data-slot="tx-type"]' }),
+      screen.getByText('Recebimento', { selector: '[data-slot="tx-type"]' }),
     ).toBeInTheDocument();
     expect(screen.getByText('0.12345678')).toBeInTheDocument();
     expect(screen.getByText('Cold BTC')).toBeInTheDocument();

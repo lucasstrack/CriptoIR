@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Input } from '@/ui/components/input';
 import { Select, type SelectOption } from '@/ui/components/select';
 import { DateRangePicker, type DateRange } from '@/ui/components/date-range-picker';
-import { t } from '@/lib/i18n';
+import { t, type MessageKey } from '@/lib/i18n';
 import { useWallets } from '@/ui/features/wallets/use-wallets';
 import type { Network, TransactionsFilters, TxType } from './use-transactions';
 
@@ -46,7 +46,7 @@ export function TransactionsFiltersForm({ value, onChange }: TransactionsFilters
     () =>
       TYPE_VALUES.map((typeValue) => ({
         value: typeValue,
-        label: typeValue,
+        label: t(`transactions.types.${typeValue}` as MessageKey),
       })),
     [],
   );

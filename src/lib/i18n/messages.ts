@@ -99,6 +99,16 @@ export const ptBR = {
   'transactions.pagination.previous': 'Anterior',
   'transactions.pagination.next': 'Próxima',
   'transactions.pagination.pageOf': 'Página {page} de {totalPages} — {total} registros',
+  'transactions.types.TRANSFER_IN': 'Recebimento',
+  'transactions.types.TRANSFER_OUT': 'Envio',
+  'transactions.types.INTERNAL': 'Transferência interna',
+  'transactions.types.SWAP': 'Swap',
+  'transactions.types.FEE': 'Taxa',
+  'transactions.types.LIQUIDITY_ADD': 'Adição de liquidez',
+  'transactions.types.LIQUIDITY_REMOVE': 'Remoção de liquidez',
+  'transactions.types.STAKING_IN': 'Staking (entrada)',
+  'transactions.types.STAKING_OUT': 'Staking (saída)',
+  'transactions.types.UNKNOWN': 'Desconhecido',
 } as const;
 
 export type MessageKey = keyof typeof ptBR;
