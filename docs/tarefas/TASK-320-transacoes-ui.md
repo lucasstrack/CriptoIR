@@ -1,12 +1,12 @@
 ---
 id: TASK-320
 title: Tela Transações (grid TanStack Table com filtros)
-status: in-review
+status: approved
 wave: 3
 depends_on: [TASK-300]
 parallel_safe_with: [TASK-310, TASK-330]
 owner_dev: claude-dev
-owner_reviewer:
+owner_reviewer: claude-reviewer
 branch: task/TASK-320-transacoes-ui
 acceptance:
   - criterion: "Rota `/transacoes` renderiza grid TanStack Table v8 com colunas data, rede, tipo, asset, amount, wallet, hash"
