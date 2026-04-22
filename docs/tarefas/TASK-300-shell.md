@@ -1,7 +1,7 @@
 ---
 id: TASK-300
 title: Shell da app (layout, navbar, toggle USD/BRL, providers)
-status: approved
+status: done
 wave: 3
 depends_on: [TASK-230]
 parallel_safe_with: []
