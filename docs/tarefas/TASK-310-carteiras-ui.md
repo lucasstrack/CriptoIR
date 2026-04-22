@@ -1,12 +1,12 @@
 ---
 id: TASK-310
 title: Tela Carteiras (CRUD + botão sincronizar)
-status: in-review
+status: approved
 wave: 3
 depends_on: [TASK-300]
 parallel_safe_with: [TASK-320, TASK-330]
 owner_dev: claude-dev
-owner_reviewer:
+owner_reviewer: claude-reviewer
 branch: task/TASK-310-carteiras-ui
 acceptance:
   - criterion: "Rota `/carteiras` lista wallets cadastradas com label, endereço truncado, rede e lastSyncedAt"
