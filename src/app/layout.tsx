@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { QueryProvider } from '@/ui/providers/query-provider';
+import { t } from '@/lib/i18n';
 
 export const metadata: Metadata = {
-  title: 'CriptoIR',
-  description: 'Rastreador local de transações on-chain e agregador de patrimônio em cripto.',
+  title: t('app.title'),
+  description: t('app.description'),
 };
 
 export default function RootLayout({
@@ -13,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className="dark">
-      <body>{children}</body>
+      <body>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

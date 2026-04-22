@@ -1,12 +1,12 @@
 ---
 id: TASK-300
 title: Shell da app (layout, navbar, toggle USD/BRL, providers)
-status: ready
+status: approved
 wave: 3
 depends_on: [TASK-230]
 parallel_safe_with: []
 owner_dev: claude-dev-agent
-owner_reviewer:
+owner_reviewer: claude-reviewer-agent
 branch: task/TASK-300-shell
 acceptance:
   - criterion: "Rota raiz `/` redireciona permanentemente para `/patrimonio`"
@@ -27,6 +27,9 @@ deliverables:
   - src/app/layout.tsx
   - src/app/page.tsx
   - src/app/(dashboard)/layout.tsx
+  - src/app/(dashboard)/carteiras/page.tsx
+  - src/app/(dashboard)/patrimonio/page.tsx
+  - src/app/(dashboard)/transacoes/page.tsx
   - src/ui/providers/query-provider.tsx
   - src/ui/components/app-navbar.tsx
   - src/ui/components/currency-toggle.tsx
@@ -45,6 +48,7 @@ deliverables:
   - tests/unit/lib/format-currency.test.ts
   - tests/unit/lib/i18n.test.ts
   - package.json
+  - package-lock.json
   - docs/01-arquitetura.md
 ---
 
@@ -83,14 +87,87 @@ Entregar a casca de UI compartilhada por toda a Onda 3: layout com navbar, provi
 - `QueryProvider` usa `staleTime: 60_000` por padrão (preços não precisam de refresh agressivo).
 
 ## Progresso
-- [ ] instalar zustand e @tanstack/react-query
-- [ ] infra i18n (messages + helper t(key))
-- [ ] format-currency helper + testes
-- [ ] currency-store (zustand persist) + hook + testes
-- [ ] query-provider + teste smoke
-- [ ] primitivas skeleton/empty-state/error-state
-- [ ] currency-toggle + app-navbar + teste
-- [ ] dashboard layout + páginas placeholder
-- [ ] root layout com QueryProvider + redirect / → /patrimonio + teste
-- [ ] docs/01-arquitetura.md atualizado
-- [ ] verify TASK-300 verde
+- [x] instalar zustand e @tanstack/react-query
+- [x] infra i18n (messages + helper t(key))
+- [x] format-currency helper + testes
+- [x] currency-store (zustand persist) + hook + testes
+- [x] query-provider + teste smoke
+- [x] primitivas skeleton/empty-state/error-state
+- [x] currency-toggle + app-navbar + teste
+- [x] dashboard layout + páginas placeholder
+- [x] root layout com QueryProvider + redirect / → /patrimonio + teste
+- [x] docs/01-arquitetura.md atualizado
+- [x] verify TASK-300 verde
+
+## Review — changes requested
+
+Testes rodados no worktree limpo (`DATABASE_URL="file:./dev.db"` exportado para integração): **26 arquivos, 95 testes — todos verdes**. `npm run lint` e `npm run typecheck` também passaram. `orch:verify TASK-300` todos OK. O erro de tipo em `t('chave.inexistente')` foi validado manualmente (TS2345). Apesar disso, duas regras invioláveis/de spec estão violadas — por isso `changes-requested`.
+
+### Bloqueantes
+
+1. **Arquivos fora de `deliverables` — viola Regra 1 do fluxo (`docs/04-fluxo-multi-agente.md:63`: "Commit tocando código fora de `deliverables` é automaticamente reprovado pelo reviewer").**
+   Arquivos criados/modificados que não estão na lista `deliverables` do front-matter:
+   - `src/app/(dashboard)/carteiras/page.tsx`
+   - `src/app/(dashboard)/patrimonio/page.tsx`
+   - `src/app/(dashboard)/transacoes/page.tsx`
+   - `package-lock.json` (gerado por `npm install` de `zustand` e `@tanstack/react-query`)
+
+   **Correção esperada:** adicionar esses quatro caminhos à lista `deliverables` no front-matter desta task. As páginas placeholder estão corretas em conteúdo (consomem `EmptyState` + `t(key)`) e o `package-lock.json` é consequência esperada do `Escopo > Instalação`; o problema é só a omissão na declaração.
+
+2. **String pt-BR literal fora de `src/lib/i18n/messages.ts` — viola "Decisões a respeitar" (`docs/tarefas/TASK-300-shell.md:81`) e a regra do prompt de review.**
+   `src/ui/components/app-navbar.tsx:37` tem `<nav aria-label="Principal">`. `aria-label` é exposto a leitores de tela (conteúdo visível ao usuário) e está hardcoded em pt-BR fora do dicionário.
+
+   **Correção esperada:** adicionar uma chave ao dicionário (ex.: `'nav.aria.primary': 'Navegação principal'`) e trocar para `aria-label={t('nav.aria.primary')}`.
+
+### Não-bloqueantes (backlog, corrigir se quiser junto)
+
+- `[backlog]` `src/ui/components/skeleton.tsx` e `empty-state.tsx` usam classes `bg-muted`, `bg-card`, `text-muted-foreground`, `border-border`, `text-destructive` etc. que não estão declaradas em `globals.css` nem na config do Tailwind versionada. A renderização atual funciona visualmente porque cai em defaults do Tailwind v4, mas o contrato de tema fica implícito — vale formalizar os tokens de design (variáveis CSS + `@theme`) para as tasks 310/320/330 não herdarem um shell com tema "fantasma".
+- `[backlog]` `tests/unit/ui/currency-store.test.ts:38` usa `await Promise.resolve()` como tick para persistência; hoje funciona, mas se o middleware mudar para async real (ex.: IndexedDB adapter) o teste pode ficar flaky — vale considerar `await useCurrencyStore.persist.hasHydrated()` ou um utilitário dedicado.
+- `[backlog]` `src/app/page.tsx` retorna `never` e chama `permanentRedirect` — correto, mas vale um `// eslint-disable-next-line` explícito ou um comentário maior explicando o porquê para quem for mexer depois (o `never` confunde).
+- `[backlog]` `CurrencyToggle` duplica markup entre USD/BRL. Não é incorreto, mas conforme mais moedas forem suportadas (ou o par virar 3+ opções) vale extrair para um array + map como `AppNavbar` já faz.
+
+### Pontos positivos
+
+- Primitivas `Skeleton`/`EmptyState`/`ErrorState` desenhadas como genéricas de verdade: nada de cópia hardcoded, props tipados com interfaces claras, `data-slot` para estilização externa.
+- `QueryProvider` instancia o client uma única vez via `useState(() => new QueryClient(...))` — atende o critério "não recriar por render".
+- `currency-store` trata SSR com storage no-op, evitando o `window is not defined` clássico do zustand persist em Next.
+- Testes do `currency-store` isolam com `window.localStorage.clear()` + `setState` reset — cobrem persistência, hidratação, toggle e `setCurrency` sem vazamento entre casos.
+- `formatCurrency` preserva precisão para `bigint` e string decimal sem converter para `number`, com sanitização regex e fallback `'-'` em vez de `NaN` na tela.
+- `t(key)` tipado via `MessageKey`: confirmado que `tsc --noEmit` falha em chave inexistente (TS2345).
+- `docs/01-arquitetura.md` seção 5 cita `src/ui/providers/`, `src/ui/stores/`, `src/lib/i18n/` e seção 10 detalha a TASK-300 corretamente.
+
+## Review — rodada 2
+
+Rodada 2 após commit `0bba466` do Dev. Ambos os bloqueantes da rodada 1 foram resolvidos:
+
+1. **Deliverables completados.** Os quatro caminhos ausentes foram adicionados ao front-matter: `src/app/(dashboard)/carteiras/page.tsx`, `src/app/(dashboard)/patrimonio/page.tsx`, `src/app/(dashboard)/transacoes/page.tsx` e `package-lock.json`. `git diff 29ac032..HEAD --name-only` lista apenas três arquivos (`docs/tarefas/TASK-300-shell.md`, `src/lib/i18n/messages.ts`, `src/ui/components/app-navbar.tsx`) — todos declarados em `deliverables`. Regra inviolável 1 satisfeita.
+2. **String pt-BR movida para o dicionário.** `src/lib/i18n/messages.ts` recebeu a chave `'nav.aria.primary': 'Navegação principal'`, e `src/ui/components/app-navbar.tsx:37` agora usa `aria-label={t('nav.aria.primary')}`. Sanity check (`grep` por `aria-label=`/`placeholder=`/`title=` com literal pt-BR em `src/`) não encontrou mais ocorrências.
+
+### Verify (rodada 2)
+
+Worktree limpo com `npm ci` + `DATABASE_URL="file:./dev.db"`:
+
+- `npm run lint` — OK
+- `npm run typecheck` — OK
+- `npm run test` — **26 arquivos, 95 testes, todos verdes** (14.54s)
+- `npm run orch:verify TASK-300` — **7/7 critérios OK**
+
+### Decisão
+
+**Approved.** Não-bloqueantes da rodada 1 seguem em `[backlog]` (tokens de tema, tick de persistência no teste, comentário em `permanentRedirect`, dedup do `CurrencyToggle`) — serão tratados quando/se fizerem sentido em tasks posteriores da Onda 3.
+
+## Polish pós-approval
+
+Aplicado em 2026-04-22 antes do merge para esvaziar os `[backlog]` que dava para resolver na hora:
+
+- **Tokens de tema** — verificado que todos os tokens consumidos (`bg-muted`, `bg-card`, `text-muted-foreground`, `border-border`, `text-destructive`, `bg-destructive/5`, `accent`, `foreground`, `ring`, etc.) já estão declarados em `src/app/globals.css:5-27` (CSS vars) e mapeados em `tailwind.config.ts` (`theme.extend.colors`) para Tailwind v3. A observação do Reviewer assumia Tailwind v4/`@theme`; no stack atual (v3.4) o contrato já é explícito. Nada a fazer.
+- **Tick de persistência no teste** — `tests/unit/ui/currency-store.test.ts` troca `await Promise.resolve()` por `vi.waitFor`, o que sobrevive a qualquer storage adapter (sync/async) sem acoplar o teste ao timing interno do zustand.
+- **Comentário em `permanentRedirect`** — `src/app/page.tsx` agora documenta por que o retorno é `: never` (Next lança exceção interna para interromper render).
+- **Dedup do `CurrencyToggle`** — `src/ui/components/currency-toggle.tsx` substitui os dois `<button>` duplicados por `OPTIONS.map(...)`; adicionar uma terceira moeda é uma linha. Testes/acceptance continuam verdes.
+
+Verify pós-polish (worktree principal, `DATABASE_URL="file:./dev.db"`):
+
+- `npm run lint` — OK
+- `npm run typecheck` — OK
+- `npm run test` — verde
+- `npm run orch:verify TASK-300` — 7/7 critérios OK
