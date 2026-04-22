@@ -1,16 +1,23 @@
 'use client';
 
+import type { CurrencyCode } from '@/lib/format-currency';
 import { useCurrency } from '@/ui/hooks/use-currency';
-import { t } from '@/lib/i18n';
+import { t, type MessageKey } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 export interface CurrencyToggleProps {
   className?: string;
 }
 
+const OPTIONS: ReadonlyArray<{ code: CurrencyCode; labelKey: MessageKey }> = [
+  { code: 'USD', labelKey: 'currency.toggle.usd' },
+  { code: 'BRL', labelKey: 'currency.toggle.brl' },
+];
+
 /**
  * Par de botões segmentado para alternar USD/BRL. Lê e escreve diretamente
- * no store global (`useCurrency`), sem prop drilling.
+ * no store global (`useCurrency`), sem prop drilling. Basta adicionar uma
+ * entrada em `OPTIONS` para suportar uma moeda nova.
  */
 export function CurrencyToggle({ className }: CurrencyToggleProps) {
   const { currency, setCurrency } = useCurrency();
@@ -24,32 +31,25 @@ export function CurrencyToggle({ className }: CurrencyToggleProps) {
         className,
       )}
     >
-      <button
-        type="button"
-        aria-pressed={currency === 'USD'}
-        onClick={() => setCurrency('USD')}
-        className={cn(
-          'rounded-sm px-2.5 py-1 transition-colors',
-          currency === 'USD'
-            ? 'bg-background text-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground',
-        )}
-      >
-        {t('currency.toggle.usd')}
-      </button>
-      <button
-        type="button"
-        aria-pressed={currency === 'BRL'}
-        onClick={() => setCurrency('BRL')}
-        className={cn(
-          'rounded-sm px-2.5 py-1 transition-colors',
-          currency === 'BRL'
-            ? 'bg-background text-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground',
-        )}
-      >
-        {t('currency.toggle.brl')}
-      </button>
+      {OPTIONS.map(({ code, labelKey }) => {
+        const active = currency === code;
+        return (
+          <button
+            key={code}
+            type="button"
+            aria-pressed={active}
+            onClick={() => setCurrency(code)}
+            className={cn(
+              'rounded-sm px-2.5 py-1 transition-colors',
+              active
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {t(labelKey)}
+          </button>
+        );
+      })}
     </div>
   );
 }

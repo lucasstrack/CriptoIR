@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CURRENCY_STORAGE_KEY, useCurrencyStore } from '@/ui/stores/currency-store';
 
 describe('currency-store', () => {
@@ -33,12 +33,15 @@ describe('currency-store', () => {
   it('persiste em localStorage sob a chave criptoir:currency', async () => {
     useCurrencyStore.getState().setCurrency('BRL');
 
-    // zustand persist escreve de forma assíncrona via storage; dá um tick.
-    await Promise.resolve();
-
-    const raw = window.localStorage.getItem(CURRENCY_STORAGE_KEY);
-    expect(raw).not.toBeNull();
-    const parsed = JSON.parse(raw ?? '{}');
+    // zustand persist pode escrever de forma assíncrona dependendo do
+    // storage adapter (no-op em SSR, sync em localStorage, Promise em
+    // IndexedDB). `vi.waitFor` sobrevive a qualquer dos três sem assumir
+    // um tick específico.
+    const parsed = await vi.waitFor(() => {
+      const raw = window.localStorage.getItem(CURRENCY_STORAGE_KEY);
+      expect(raw).not.toBeNull();
+      return JSON.parse(raw ?? '{}');
+    });
     expect(parsed.state.currency).toBe('BRL');
   });
 

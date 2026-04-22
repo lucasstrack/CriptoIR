@@ -155,3 +155,19 @@ Worktree limpo com `npm ci` + `DATABASE_URL="file:./dev.db"`:
 ### Decisão
 
 **Approved.** Não-bloqueantes da rodada 1 seguem em `[backlog]` (tokens de tema, tick de persistência no teste, comentário em `permanentRedirect`, dedup do `CurrencyToggle`) — serão tratados quando/se fizerem sentido em tasks posteriores da Onda 3.
+
+## Polish pós-approval
+
+Aplicado em 2026-04-22 antes do merge para esvaziar os `[backlog]` que dava para resolver na hora:
+
+- **Tokens de tema** — verificado que todos os tokens consumidos (`bg-muted`, `bg-card`, `text-muted-foreground`, `border-border`, `text-destructive`, `bg-destructive/5`, `accent`, `foreground`, `ring`, etc.) já estão declarados em `src/app/globals.css:5-27` (CSS vars) e mapeados em `tailwind.config.ts` (`theme.extend.colors`) para Tailwind v3. A observação do Reviewer assumia Tailwind v4/`@theme`; no stack atual (v3.4) o contrato já é explícito. Nada a fazer.
+- **Tick de persistência no teste** — `tests/unit/ui/currency-store.test.ts` troca `await Promise.resolve()` por `vi.waitFor`, o que sobrevive a qualquer storage adapter (sync/async) sem acoplar o teste ao timing interno do zustand.
+- **Comentário em `permanentRedirect`** — `src/app/page.tsx` agora documenta por que o retorno é `: never` (Next lança exceção interna para interromper render).
+- **Dedup do `CurrencyToggle`** — `src/ui/components/currency-toggle.tsx` substitui os dois `<button>` duplicados por `OPTIONS.map(...)`; adicionar uma terceira moeda é uma linha. Testes/acceptance continuam verdes.
+
+Verify pós-polish (worktree principal, `DATABASE_URL="file:./dev.db"`):
+
+- `npm run lint` — OK
+- `npm run typecheck` — OK
+- `npm run test` — verde
+- `npm run orch:verify TASK-300` — 7/7 critérios OK
