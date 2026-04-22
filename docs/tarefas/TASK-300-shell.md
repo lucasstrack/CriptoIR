@@ -1,7 +1,7 @@
 ---
 id: TASK-300
 title: Shell da app (layout, navbar, toggle USD/BRL, providers)
-status: ready
+status: approved
 wave: 3
 depends_on: [TASK-230]
 parallel_safe_with: []
@@ -135,3 +135,23 @@ Testes rodados no worktree limpo (`DATABASE_URL="file:./dev.db"` exportado para 
 - `formatCurrency` preserva precisão para `bigint` e string decimal sem converter para `number`, com sanitização regex e fallback `'-'` em vez de `NaN` na tela.
 - `t(key)` tipado via `MessageKey`: confirmado que `tsc --noEmit` falha em chave inexistente (TS2345).
 - `docs/01-arquitetura.md` seção 5 cita `src/ui/providers/`, `src/ui/stores/`, `src/lib/i18n/` e seção 10 detalha a TASK-300 corretamente.
+
+## Review — rodada 2
+
+Rodada 2 após commit `0bba466` do Dev. Ambos os bloqueantes da rodada 1 foram resolvidos:
+
+1. **Deliverables completados.** Os quatro caminhos ausentes foram adicionados ao front-matter: `src/app/(dashboard)/carteiras/page.tsx`, `src/app/(dashboard)/patrimonio/page.tsx`, `src/app/(dashboard)/transacoes/page.tsx` e `package-lock.json`. `git diff 29ac032..HEAD --name-only` lista apenas três arquivos (`docs/tarefas/TASK-300-shell.md`, `src/lib/i18n/messages.ts`, `src/ui/components/app-navbar.tsx`) — todos declarados em `deliverables`. Regra inviolável 1 satisfeita.
+2. **String pt-BR movida para o dicionário.** `src/lib/i18n/messages.ts` recebeu a chave `'nav.aria.primary': 'Navegação principal'`, e `src/ui/components/app-navbar.tsx:37` agora usa `aria-label={t('nav.aria.primary')}`. Sanity check (`grep` por `aria-label=`/`placeholder=`/`title=` com literal pt-BR em `src/`) não encontrou mais ocorrências.
+
+### Verify (rodada 2)
+
+Worktree limpo com `npm ci` + `DATABASE_URL="file:./dev.db"`:
+
+- `npm run lint` — OK
+- `npm run typecheck` — OK
+- `npm run test` — **26 arquivos, 95 testes, todos verdes** (14.54s)
+- `npm run orch:verify TASK-300` — **7/7 critérios OK**
+
+### Decisão
+
+**Approved.** Não-bloqueantes da rodada 1 seguem em `[backlog]` (tokens de tema, tick de persistência no teste, comentário em `permanentRedirect`, dedup do `CurrencyToggle`) — serão tratados quando/se fizerem sentido em tasks posteriores da Onda 3.
