@@ -1,7 +1,7 @@
 ---
 id: TASK-310
 title: Tela Carteiras (CRUD + botão sincronizar)
-status: approved
+status: done
 wave: 3
 depends_on: [TASK-300]
 parallel_safe_with: [TASK-320, TASK-330]
