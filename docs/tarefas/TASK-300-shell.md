@@ -1,7 +1,7 @@
 ---
 id: TASK-300
 title: Shell da app (layout, navbar, toggle USD/BRL, providers)
-status: changes-requested
+status: ready
 wave: 3
 depends_on: [TASK-230]
 parallel_safe_with: []
@@ -27,6 +27,9 @@ deliverables:
   - src/app/layout.tsx
   - src/app/page.tsx
   - src/app/(dashboard)/layout.tsx
+  - src/app/(dashboard)/carteiras/page.tsx
+  - src/app/(dashboard)/patrimonio/page.tsx
+  - src/app/(dashboard)/transacoes/page.tsx
   - src/ui/providers/query-provider.tsx
   - src/ui/components/app-navbar.tsx
   - src/ui/components/currency-toggle.tsx
@@ -45,6 +48,7 @@ deliverables:
   - tests/unit/lib/format-currency.test.ts
   - tests/unit/lib/i18n.test.ts
   - package.json
+  - package-lock.json
   - docs/01-arquitetura.md
 ---
 

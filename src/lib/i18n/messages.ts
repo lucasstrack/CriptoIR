@@ -16,6 +16,7 @@ export const ptBR = {
   'nav.carteiras': 'Carteiras',
   'nav.transacoes': 'Transações',
   'nav.brand': 'CriptoIR',
+  'nav.aria.primary': 'Navegação principal',
 
   // Toggle de moeda
   'currency.toggle.label': 'Moeda',

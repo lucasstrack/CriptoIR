@@ -34,7 +34,7 @@ export function AppNavbar() {
           >
             {t('nav.brand')}
           </Link>
-          <nav aria-label="Principal">
+          <nav aria-label={t('nav.aria.primary')}>
             <ul className="flex items-center gap-6 text-sm">
               {NAV_ITEMS.map((item) => {
                 const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
