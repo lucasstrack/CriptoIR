@@ -1,12 +1,12 @@
 ---
 id: TASK-340
 title: Gráficos de patrimônio (evolução semanal + breakdown)
-status: ready
+status: approved
 wave: 3
 depends_on: [TASK-330]
 parallel_safe_with: []
-owner_dev:
-owner_reviewer:
+owner_dev: claude-dev
+owner_reviewer: claude-reviewer
 branch: task/TASK-340-patrimonio-charts
 acceptance:
   - criterion: "Seção de gráficos renderiza gráfico de linha com evolução semanal (weekStart x total) consumindo GET /api/portfolio/history"

@@ -125,6 +125,26 @@ export const ptBR = {
   'portfolio.table.averagePrice': 'Preço médio',
   'portfolio.table.currentPrice': 'Preço atual',
   'portfolio.table.value': 'Valor atual',
+
+  // Graficos de patrimonio (TASK-340)
+  'portfolio.charts.history.title': 'Evolução semanal do patrimônio',
+  'portfolio.charts.history.subtitle': 'Total consolidado por semana na moeda selecionada.',
+  'portfolio.charts.history.loading.aria': 'Carregando evolução do patrimônio',
+  'portfolio.charts.history.empty.title': 'Sem histórico ainda',
+  'portfolio.charts.history.empty.body':
+    'O primeiro snapshot semanal aparecerá aqui após a próxima sincronização.',
+  'portfolio.charts.history.error.title': 'Não foi possível carregar o histórico',
+  'portfolio.charts.history.error.body': 'Tente novamente em instantes.',
+  'portfolio.charts.history.error.retry': 'Tentar novamente',
+  'portfolio.charts.history.seriesLabel': 'Patrimônio total',
+  'portfolio.charts.breakdown.title': 'Distribuição por ativo',
+  'portfolio.charts.breakdown.subtitle': 'Participação percentual de cada ativo no patrimônio atual.',
+  'portfolio.charts.breakdown.loading.aria': 'Carregando distribuição por ativo',
+  'portfolio.charts.breakdown.empty.title': 'Sem ativos para distribuir',
+  'portfolio.charts.breakdown.empty.body': 'Sincronize uma carteira para ver o breakdown.',
+  'portfolio.charts.breakdown.error.title': 'Não foi possível carregar o breakdown',
+  'portfolio.charts.breakdown.error.body': 'Tente novamente em instantes.',
+  'portfolio.charts.breakdown.error.retry': 'Tentar novamente',
 } as const;
 
 export type MessageKey = keyof typeof ptBR;
