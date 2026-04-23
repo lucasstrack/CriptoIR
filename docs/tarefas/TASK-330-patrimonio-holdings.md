@@ -1,12 +1,12 @@
 ---
 id: TASK-330
 title: Tela Patrimônio (holdings + total consolidado)
-status: in-review
+status: approved
 wave: 3
 depends_on: [TASK-300]
 parallel_safe_with: [TASK-310, TASK-320]
 owner_dev: claude-dev
-owner_reviewer:
+owner_reviewer: claude-reviewer
 branch: task/TASK-330-patrimonio-holdings
 acceptance:
   - criterion: "Rota `/patrimonio` mostra total consolidado (soma de valueUsd/valueBrl) no topo respeitando toggle USD/BRL"
