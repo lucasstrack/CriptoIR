@@ -72,12 +72,12 @@ export function BreakdownDonut() {
       title={t('portfolio.charts.breakdown.title')}
       subtitle={t('portfolio.charts.breakdown.subtitle')}
       isLoading={query.isPending}
-      loadingAriaLabel={t('portfolio.loading.aria')}
+      loadingAriaLabel={t('portfolio.charts.breakdown.loading.aria')}
       isError={query.isError}
       errorState={{
-        title: t('portfolio.error.title'),
-        description: t('portfolio.error.body'),
-        retryLabel: t('portfolio.error.retry'),
+        title: t('portfolio.charts.breakdown.error.title'),
+        description: t('portfolio.charts.breakdown.error.body'),
+        retryLabel: t('portfolio.charts.breakdown.error.retry'),
         onRetry: () => {
           void query.refetch();
         },

@@ -139,8 +139,12 @@ export const ptBR = {
   'portfolio.charts.history.seriesLabel': 'Patrimônio total',
   'portfolio.charts.breakdown.title': 'Distribuição por ativo',
   'portfolio.charts.breakdown.subtitle': 'Participação percentual de cada ativo no patrimônio atual.',
+  'portfolio.charts.breakdown.loading.aria': 'Carregando distribuição por ativo',
   'portfolio.charts.breakdown.empty.title': 'Sem ativos para distribuir',
   'portfolio.charts.breakdown.empty.body': 'Sincronize uma carteira para ver o breakdown.',
+  'portfolio.charts.breakdown.error.title': 'Não foi possível carregar o breakdown',
+  'portfolio.charts.breakdown.error.body': 'Tente novamente em instantes.',
+  'portfolio.charts.breakdown.error.retry': 'Tentar novamente',
 } as const;
 
 export type MessageKey = keyof typeof ptBR;

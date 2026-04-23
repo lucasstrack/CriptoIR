@@ -22,6 +22,8 @@ interface ChartPoint {
   value: number;
 }
 
+const AXIS_TICK_OPTS = { maximumFractionDigits: 0, minimumFractionDigits: 0 } as const;
+
 function formatWeekLabel(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
@@ -109,7 +111,7 @@ export function LineChartHistory() {
           <YAxis
             stroke="hsl(var(--muted-foreground))"
             tick={{ fontSize: 12 }}
-            tickFormatter={(value: number) => formatCurrency(value, currency, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
+            tickFormatter={(value: number) => formatCurrency(value, currency, AXIS_TICK_OPTS)}
             width={90}
           />
           <Tooltip content={<HistoryTooltip currency={currency} />} />
