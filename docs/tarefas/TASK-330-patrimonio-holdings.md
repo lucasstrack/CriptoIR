@@ -1,7 +1,7 @@
 ---
 id: TASK-330
 title: Tela Patrimônio (holdings + total consolidado)
-status: approved
+status: done
 wave: 3
 depends_on: [TASK-300]
 parallel_safe_with: [TASK-310, TASK-320]
