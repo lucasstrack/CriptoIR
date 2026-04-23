@@ -1,7 +1,7 @@
 ---
 id: TASK-340
 title: Gráficos de patrimônio (evolução semanal + breakdown)
-status: approved
+status: done
 wave: 3
 depends_on: [TASK-330]
 parallel_safe_with: []
