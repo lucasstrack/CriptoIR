@@ -1,7 +1,7 @@
 ---
 id: TASK-320
 title: Tela Transações (grid TanStack Table com filtros)
-status: approved
+status: done
 wave: 3
 depends_on: [TASK-300]
 parallel_safe_with: [TASK-310, TASK-330]
