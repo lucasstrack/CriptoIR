@@ -1,11 +1,11 @@
 ---
 id: TASK-340
 title: Gráficos de patrimônio (evolução semanal + breakdown)
-status: ready
+status: in-review
 wave: 3
 depends_on: [TASK-330]
 parallel_safe_with: []
-owner_dev:
+owner_dev: claude-dev
 owner_reviewer:
 branch: task/TASK-340-patrimonio-charts
 acceptance:

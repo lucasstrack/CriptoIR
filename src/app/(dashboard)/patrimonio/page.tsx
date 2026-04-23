@@ -4,7 +4,9 @@ import { EmptyState } from '@/ui/components/empty-state';
 import { ErrorState } from '@/ui/components/error-state';
 import { Skeleton } from '@/ui/components/skeleton';
 import { t } from '@/lib/i18n';
+import { BreakdownDonut } from '@/ui/features/portfolio/breakdown-donut';
 import { HoldingsTable } from '@/ui/features/portfolio/holdings-table';
+import { LineChartHistory } from '@/ui/features/portfolio/line-chart-history';
 import { TotalSummary } from '@/ui/features/portfolio/total-summary';
 import { useHoldings } from '@/ui/features/portfolio/use-holdings';
 
@@ -49,8 +51,10 @@ export default function PatrimonioPage() {
       <>
         <TotalSummary holdings={holdingsQuery.data} />
         <HoldingsTable holdings={holdingsQuery.data} />
-        {/* Slot reservado para graficos — TASK-340 injeta aqui */}
-        <section id="charts" aria-hidden="true" />
+        <section id="charts" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <LineChartHistory />
+          <BreakdownDonut />
+        </section>
       </>
     );
   }

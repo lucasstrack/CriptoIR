@@ -35,5 +35,6 @@ export function useHoldings(): UseQueryResult<Holding[], Error> {
       const { data } = await apiClient<Holding[]>('/api/holdings');
       return data;
     },
+    staleTime: 30_000,
   });
 }
