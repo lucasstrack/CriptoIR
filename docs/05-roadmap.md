@@ -49,3 +49,4 @@ Ondas e tasks. Detalhes de cada task ficam em `docs/tarefas/TASK-XXX.md`.
 - **Da TASK-240** — registrar `PortfolioSnapshot` cron no bootstrap de `src/infra/jobs/index.ts` (hoje só `sync-cron` é registrado no startup).
 - **Da TASK-240** — adicionar script `snapshot` em `package.json` apontando para `scripts/portfolio-snapshot.ts` (hoje é invocável só via `npx tsx`).
 - **Da TASK-310** — separar `INVALID_JSON` de `INVALID_ENVELOPE` em `api-client.ts` + nova `ErrorCode` compartilhada em `src/lib/errors.ts` (facilita observabilidade). Arquivado por exigir mudança em contrato de erros, fora do escopo da TASK-310.
+- **Da TASK-320** — migrar placeholders `pageOf` (hoje via `String.replace('{page}', …)`) para ICU message format quando o sistema de i18n migrar para `next-intl`. Arquivado por depender da troca completa do módulo `src/lib/i18n/` — fora do escopo de polish pós-review.
