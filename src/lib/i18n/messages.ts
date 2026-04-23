@@ -109,6 +109,22 @@ export const ptBR = {
   'transactions.types.STAKING_IN': 'Staking (entrada)',
   'transactions.types.STAKING_OUT': 'Staking (saída)',
   'transactions.types.UNKNOWN': 'Desconhecido',
+
+  // Patrimonio (TASK-330)
+  'portfolio.page.title': 'Patrimônio',
+  'portfolio.page.description': 'Total consolidado e detalhamento por ativo na moeda selecionada.',
+  'portfolio.loading.aria': 'Carregando patrimônio',
+  'portfolio.empty.title': 'Sem posições no patrimônio',
+  'portfolio.empty.body': 'Sincronize uma carteira para ver o total consolidado.',
+  'portfolio.error.title': 'Não foi possível carregar o patrimônio',
+  'portfolio.error.body': 'Tente novamente em instantes.',
+  'portfolio.error.retry': 'Tentar novamente',
+  'portfolio.total.label': 'Total consolidado',
+  'portfolio.table.asset': 'Ativo',
+  'portfolio.table.amount': 'Quantidade',
+  'portfolio.table.averagePrice': 'Preço médio',
+  'portfolio.table.currentPrice': 'Preço atual',
+  'portfolio.table.value': 'Valor atual',
 } as const;
 
 export type MessageKey = keyof typeof ptBR;

@@ -1,11 +1,11 @@
 ---
 id: TASK-330
 title: Tela Patrimônio (holdings + total consolidado)
-status: ready
+status: in-review
 wave: 3
 depends_on: [TASK-300]
 parallel_safe_with: [TASK-310, TASK-320]
-owner_dev:
+owner_dev: claude-dev
 owner_reviewer:
 branch: task/TASK-330-patrimonio-holdings
 acceptance:
