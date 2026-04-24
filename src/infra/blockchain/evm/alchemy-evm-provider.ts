@@ -95,7 +95,7 @@ export class AlchemyEvmProvider implements BlockchainProvider {
     // quebra o calculo de holdings downstream.
     if (transfer.value === null || !Number.isFinite(transfer.value)) {
       console.warn(
-        `[alchemy-evm] descartando transfer com value=${transfer.value} (hash=${transfer.hash}, asset=${transfer.asset ?? 'null'})`,
+        `[alchemy-evm:${this.network}] descartando transfer com value=${transfer.value} (hash=${transfer.hash}, asset=${transfer.asset ?? 'null'})`,
       );
       return null;
     }

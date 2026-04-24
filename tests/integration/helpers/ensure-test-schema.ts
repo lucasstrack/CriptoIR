@@ -13,8 +13,9 @@ const migrationFile = path.resolve(
 // `schema.prisma` (dentro da pasta `prisma/`) — nao ao cwd do processo.
 const SCHEMA_DIR = path.resolve(process.cwd(), 'prisma');
 
+// Aceita tanto `file:./path` (Prisma-style) quanto `file:///abs/path` (URL-style).
 function databasePathFromUrl(url: string): string {
-  const match = url.match(/^file:(.*)$/);
+  const match = url.match(/^file:(?:\/\/)?(.*)$/);
   if (!match) {
     throw new Error(`DATABASE_URL "${url}" nao e um path SQLite (esperado prefixo "file:").`);
   }

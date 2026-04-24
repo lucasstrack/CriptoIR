@@ -90,8 +90,9 @@ describe('AlchemyEvmProvider', () => {
     expect(result.transactions).toHaveLength(1);
     expect(result.transactions[0].txHash).toBe('0xok');
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('descartando transfer com value=null'),
+      expect.stringContaining('[alchemy-evm:ETH] descartando transfer with'.replace('with', 'com')),
     );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('value=null'));
 
     warnSpy.mockRestore();
   });
