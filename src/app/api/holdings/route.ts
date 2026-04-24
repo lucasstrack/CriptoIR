@@ -10,7 +10,8 @@ export async function GET() {
   try {
     const holdings = await computeHoldingsUseCase.execute();
     return ok(holdings);
-  } catch {
+  } catch (error) {
+    console.error('[api/holdings] erro ao calcular holdings:', error);
     return err('INTERNAL_ERROR', 'Nao foi possivel calcular holdings.');
   }
 }

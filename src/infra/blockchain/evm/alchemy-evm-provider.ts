@@ -12,7 +12,10 @@ type AlchemyTransfer = {
   blockNum: string;
   from: string | null;
   to: string | null;
-  value: number;
+  // Alchemy devolve null em tokens ERC-20 spam/honeypot com metadata quebrada
+  // (decimal null, value fora do MAX_SAFE_INTEGER, etc.). Sem amount confiavel,
+  // o transfer e descartado em `normalizeTransfer`.
+  value: number | null;
   asset: string | null;
   rawContract?: { address?: string | null };
   metadata?: { blockTimestamp?: string };
@@ -73,9 +76,9 @@ export class AlchemyEvmProvider implements BlockchainProvider {
       { fetcher: this.options.fetcher },
     );
 
-    const transactions = response.result.transfers.map((transfer) =>
-      this.normalizeTransfer(input.address.toLowerCase(), transfer),
-    );
+    const transactions = response.result.transfers
+      .map((transfer) => this.normalizeTransfer(input.address.toLowerCase(), transfer))
+      .filter((tx): tx is NormalizedTransaction => tx !== null);
 
     return {
       transactions,
@@ -83,7 +86,19 @@ export class AlchemyEvmProvider implements BlockchainProvider {
     };
   }
 
-  private normalizeTransfer(address: string, transfer: AlchemyTransfer): NormalizedTransaction {
+  private normalizeTransfer(
+    address: string,
+    transfer: AlchemyTransfer,
+  ): NormalizedTransaction | null {
+    // Descarta transfers sem amount confiavel (ERC-20 spam: decimal null ou
+    // value fora do MAX_SAFE_INTEGER). Persistir `String(null) === "null"`
+    // quebra o calculo de holdings downstream.
+    if (transfer.value === null || !Number.isFinite(transfer.value)) {
+      console.warn(
+        `[alchemy-evm] descartando transfer com value=${transfer.value} (hash=${transfer.hash}, asset=${transfer.asset ?? 'null'})`,
+      );
+      return null;
+    }
     const toAddress = transfer.to?.toLowerCase() ?? null;
     const fromAddress = transfer.from?.toLowerCase() ?? null;
     const direction =

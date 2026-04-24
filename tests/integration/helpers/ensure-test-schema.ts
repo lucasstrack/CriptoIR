@@ -7,9 +7,25 @@ const migrationFile = path.resolve(
   process.cwd(),
   'prisma/migrations/20260418170433_init/migration.sql',
 );
-const databaseFile = path.resolve(process.cwd(), 'prisma/dev.db');
+
+// Extrai o path absoluto do arquivo SQLite a partir da URL.
+// Prisma interpreta paths relativos em `file:./xxx` como RELATIVOS AO
+// `schema.prisma` (dentro da pasta `prisma/`) — nao ao cwd do processo.
+const SCHEMA_DIR = path.resolve(process.cwd(), 'prisma');
+
+function databasePathFromUrl(url: string): string {
+  const match = url.match(/^file:(.*)$/);
+  if (!match) {
+    throw new Error(`DATABASE_URL "${url}" nao e um path SQLite (esperado prefixo "file:").`);
+  }
+  const raw = match[1];
+  return path.isAbsolute(raw) ? raw : path.resolve(SCHEMA_DIR, raw);
+}
 
 export function ensureTestSchema() {
+  const databaseUrl = resolveDatabaseUrl();
+  const databaseFile = databasePathFromUrl(databaseUrl);
+
   fs.mkdirSync(path.dirname(databaseFile), { recursive: true });
 
   if (!fs.existsSync(databaseFile) || fs.statSync(databaseFile).size === 0) {
@@ -18,7 +34,7 @@ export function ensureTestSchema() {
       {
         cwd: process.cwd(),
         shell: true,
-        env: { ...process.env, DATABASE_URL: resolveDatabaseUrl() },
+        env: { ...process.env, DATABASE_URL: databaseUrl },
       },
     );
   }

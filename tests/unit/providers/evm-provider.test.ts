@@ -44,4 +44,55 @@ describe('AlchemyEvmProvider', () => {
       transfers: [{ direction: 'IN', amount: '1.5', assetSymbol: 'ETH' }],
     });
   });
+
+  it('descarta transfers de tokens spam com value null (sem derrubar o sync)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          result: {
+            transfers: [
+              {
+                hash: '0xspam',
+                blockNum: '0x20',
+                from: '0xfrom000000000000000000000000000000000000',
+                to: '0xabcdefabcdefabcdefabcdefabcdefabcdef1234',
+                value: null,
+                asset: '',
+                rawContract: { address: '0xtoken0000000000000000000000000000000000' },
+                metadata: { blockTimestamp: '2026-04-20T00:00:00.000Z' },
+              },
+              {
+                hash: '0xok',
+                blockNum: '0x21',
+                from: '0xfrom000000000000000000000000000000000000',
+                to: '0xabcdefabcdefabcdefabcdefabcdefabcdef1234',
+                value: 2.5,
+                asset: 'ETH',
+                rawContract: { address: null },
+                metadata: { blockTimestamp: '2026-04-21T00:00:00.000Z' },
+              },
+            ],
+            pageKey: null,
+          },
+        }),
+      ),
+    );
+
+    const provider = new AlchemyEvmProvider('ETH', { apiKey: 'key', fetcher });
+    const result = await provider.fetchTransactions({
+      address: '0xabcdefabcdefabcdefabcdefabcdefabcdef1234',
+      cursor: '0x0',
+    });
+
+    // Spam descartado, transfer valido preservado.
+    expect(result.transactions).toHaveLength(1);
+    expect(result.transactions[0].txHash).toBe('0xok');
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('descartando transfer com value=null'),
+    );
+
+    warnSpy.mockRestore();
+  });
 });

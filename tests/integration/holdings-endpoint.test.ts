@@ -490,4 +490,49 @@ describe('GET /api/holdings', () => {
     expect(response.status).toBe(200);
     expect(payload.data).toEqual([]);
   });
+
+  it('pula tx com amount invalido (ex.: string "null" de provider antigo) sem derrubar o endpoint', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const wallet = await createWallet('W', '0xw', 'ETH');
+    const eth = await ensureAsset('ETH', 'ETH');
+    const spamAsset = await ensureAsset('SPAM', 'ETH');
+
+    // Tx valida — entra no calculo.
+    await seedTx({
+      wallet,
+      asset: eth,
+      txHash: '0xok',
+      timestamp: '2026-03-01T00:00:00.000Z',
+      type: 'TRANSFER_IN',
+      direction: 'IN',
+      amount: '2',
+    });
+    // Tx corrompida — simula bug historico do provider (amount gravado como "null").
+    await seedTx({
+      wallet,
+      asset: spamAsset,
+      txHash: '0xspam',
+      timestamp: '2026-03-02T00:00:00.000Z',
+      type: 'TRANSFER_IN',
+      direction: 'IN',
+      amount: 'null',
+    });
+
+    __setComputeHoldingsUseCaseForTests(
+      buildUseCaseWithMockedPrices({ ETH: { priceUsd: '1000', priceBrl: '5000' } }),
+    );
+
+    const response = await GET();
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.error).toBeNull();
+    expect(payload.data).toHaveLength(1);
+    expect(payload.data[0].asset.symbol).toBe('ETH');
+    expect(payload.data[0].amount).toBe('2.000000000000000000');
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('amount invalido'),
+    );
+    warnSpy.mockRestore();
+  });
 });

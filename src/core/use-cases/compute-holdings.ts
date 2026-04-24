@@ -39,6 +39,7 @@ type HoldingComputation = {
 };
 
 const ZERO = BigInt(0);
+const DECIMAL_STRING_PATTERN = /^-?\d+(\.\d+)?$/;
 
 // Cache em memoria (por processo) para precos atuais. Chave: symbol (tupla
 // coingeckoId+currency colapsa em 1 entry porque getCurrentPrice devolve USD e BRL
@@ -109,6 +110,16 @@ export class ComputeHoldingsUseCase {
     for (const tx of transactions) {
       // Desconsidera movimentacoes internas e taxas no calculo de quantidade.
       if (tx.direction === 'INTERNAL' || tx.direction === 'SELF' || tx.type === 'FEE') {
+        continue;
+      }
+
+      // Defesa contra dados persistidos em formato invalido (ex.: provider que
+      // gravou String(null) === "null" antes do fix em alchemy-evm-provider).
+      // Uma tx corrompida nao pode derrubar o calculo de todas as outras.
+      if (typeof tx.amount !== 'string' || !DECIMAL_STRING_PATTERN.test(tx.amount.trim())) {
+        console.warn(
+          `[compute-holdings] amount invalido em tx ${tx.id} (${tx.txHash}): "${tx.amount}" — pulando`,
+        );
         continue;
       }
 
