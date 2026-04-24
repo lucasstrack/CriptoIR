@@ -59,7 +59,7 @@ Cobrir os 3 fluxos críticos da app com testes end-to-end determinísticos, usan
 - `tests/e2e/setup/record.ts`: script invocado via `npm run e2e:record` que:
   1. Exige `.env.e2e.local` com chaves reais (`ALCHEMY_API_KEY`, `HELIUS_API_KEY`, etc.).
   2. Reseta `tests/e2e/fixtures/seed.sqlite` (delete + `prisma migrate deploy`).
-  3. Cadastra 3 wallets de teste (1 BTC + 1 ETH + 1 SOL — endereços públicos fixos em constante, NÃO de usuários arbitrários).
+  3. Cadastra 3 wallets de teste — endereços públicos fixos em constante (NÃO wallets de usuários arbitrários). **BTC fixado no endereço do bloco Genesis: `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`** (recipient da primeira coinbase transaction, público, histórico estável há >15 anos — fixture ideal). ETH e SOL a escolher na execução, seguindo mesmo critério (públicos, estáveis, histórico pequeno).
   4. Dispara sync real; grava cada chamada de `fetch` em `cassettes/*.json`.
   5. Dump SQLite fica committado como fixture.
 - `tests/e2e/setup/replay.ts`: lido pelo Next no modo `FETCH_MOCK_MODE=cassettes`. Intercepta `fetch` e responde com match por URL+method.
