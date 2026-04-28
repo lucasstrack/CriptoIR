@@ -38,6 +38,8 @@ export interface SolAssetMetadataServiceOptions {
 }
 
 const DEFAULT_ENDPOINT = 'https://api.helius.xyz/v0/token-metadata';
+/** Helius DAS aceita ate 100 mintAccounts por request. */
+const MAX_MINTS_PER_REQUEST = 100;
 
 /**
  * Resolve metadata (`symbol`, `name`, `decimals`) de mints SPL.
@@ -113,25 +115,37 @@ export class SolAssetMetadataService {
 
     const endpoint = `${this.options.endpoint ?? DEFAULT_ENDPOINT}?api-key=${apiKey}`;
 
-    try {
-      const response = await fetchJson<HeliusTokenMetadataItem[]>(
-        endpoint,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ mintAccounts: mints, includeOffChain: true }),
-        },
-        { fetcher: this.options.fetcher },
-      );
-      return parseHeliusMetadata(response);
-    } catch (error) {
-      console.warn(
-        `[sol-asset-metadata] falha ao resolver ${mints.length} mint(s) via Helius — usando fallback. ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-      return new Map();
+    // Chunk para nao estourar o limite (~100 mints/req) em wallets ativas.
+    const chunks: string[][] = [];
+    for (let i = 0; i < mints.length; i += MAX_MINTS_PER_REQUEST) {
+      chunks.push(mints.slice(i, i + MAX_MINTS_PER_REQUEST));
     }
+
+    const merged = new Map<string, SolAssetMetadata>();
+    for (const chunk of chunks) {
+      try {
+        const response = await fetchJson<HeliusTokenMetadataItem[]>(
+          endpoint,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ mintAccounts: chunk, includeOffChain: true }),
+          },
+          { fetcher: this.options.fetcher },
+        );
+        for (const [mint, meta] of parseHeliusMetadata(response)) {
+          merged.set(mint, meta);
+        }
+      } catch (error) {
+        console.warn(
+          `[sol-asset-metadata] falha ao resolver chunk de ${chunk.length} mint(s) via Helius — fallback. ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        // Continua com os proximos chunks; mints faltantes caem no fallback.
+      }
+    }
+    return merged;
   }
 }
 
@@ -148,10 +162,12 @@ function parseHeliusMetadata(items: HeliusTokenMetadataItem[]): Map<string, SolA
     const offChainName = item.offChainMetadata?.metadata?.name?.trim();
     const name = onChainName || offChainName || symbol;
 
-    const decimals =
-      item.onChainAccountInfo?.accountInfo?.data?.parsed?.info?.decimals ?? 0;
+    const decimals = item.onChainAccountInfo?.accountInfo?.data?.parsed?.info?.decimals;
 
-    if (!symbol) continue;
+    // Symbol sem decimals confiavel e pior que fallback: o Asset entraria
+    // no DB com decimals=0 mas symbol "real", levando holdings a calcular
+    // valores incorretos. Sem decimals -> deixa cair no fallback do caller.
+    if (!symbol || typeof decimals !== 'number') continue;
 
     out.set(item.account, {
       symbol,

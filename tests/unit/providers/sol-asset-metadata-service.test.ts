@@ -128,4 +128,47 @@ describe('SolAssetMetadataService', () => {
     expect(meta.symbol).toBe('USDC');
     expect(fetcher).not.toHaveBeenCalled();
   });
+
+  it('chunk de >100 mints: divide em multiplas chamadas Helius', async () => {
+    // Cada mint tem 44 chars ascii distintos. 'A' inicial diferencia índices
+    // pequenos vs. grandes; padStart com '0' nao colapsa (vs. padStart com '1').
+    const manyMints = Array.from(
+      { length: 150 },
+      (_, i) => `A${i.toString().padStart(43, '0')}`,
+    );
+    // `mockImplementation` cria um Response novo a cada call — `mockResolvedValue`
+    // reutiliza o mesmo objeto e a 2a chamada falha em `response.json()` por body locked.
+    const fetcher = vi.fn().mockImplementation(() => Promise.resolve(jsonResponse([])));
+    const service = new SolAssetMetadataService({ apiKey: 'k', fetcher });
+
+    await service.resolveBatch(manyMints);
+
+    // 150 mints / 100 por request = 2 chamadas
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    const firstBody = JSON.parse(fetcher.mock.calls[0][1].body);
+    const secondBody = JSON.parse(fetcher.mock.calls[1][1].body);
+    expect(firstBody.mintAccounts).toHaveLength(100);
+    expect(secondBody.mintAccounts).toHaveLength(50);
+  });
+
+  it('symbol valido SEM decimals do payload Helius cai no fallback (evita holdings com decimals=0)', async () => {
+    const fetcher = vi.fn().mockResolvedValue(
+      jsonResponse([
+        {
+          account: UNKNOWN,
+          // onChainAccountInfo ausente -> decimals undefined
+          onChainMetadata: { metadata: { data: { name: 'X', symbol: 'XXX' } } },
+        },
+      ]),
+    );
+    const service = new SolAssetMetadataService({ apiKey: 'k', fetcher });
+
+    const result = await service.resolveBatch([UNKNOWN]);
+
+    // Symbol "XXX" foi descartado pelo parser; fallback do caller foi aplicado.
+    expect(result.get(UNKNOWN)).toMatchObject({
+      symbol: 'MINT_JUPRJZ',
+      decimals: 0,
+    });
+  });
 });
