@@ -112,9 +112,15 @@ export class TransactionRepository {
             continue;
           }
 
-          const assetId = await upsertAsset(tx, network, transfer.assetSymbol, transfer.assetAddress ?? null);
+          const assetId = await upsertAsset(
+            tx,
+            network,
+            transfer.assetSymbol,
+            transfer.assetAddress ?? null,
+            transfer.decimals,
+          );
           const feeAssetId = entry.normalized.fee
-            ? await upsertAsset(tx, network, entry.normalized.fee.assetSymbol, null)
+            ? await upsertAsset(tx, network, entry.normalized.fee.assetSymbol, null, undefined)
             : null;
 
           await tx.transaction.create({
@@ -181,7 +187,10 @@ async function upsertAsset(
   network: Network,
   symbol: string,
   contractAddress: string | null,
+  providerDecimals: number | undefined,
 ): Promise<string> {
+  const decimals = providerDecimals ?? defaultDecimals(network, contractAddress);
+
   if (contractAddress === null) {
     const existing = await tx.asset.findFirst({
       where: { network, contractAddress: null, symbol },
@@ -196,7 +205,7 @@ async function upsertAsset(
         symbol,
         name: symbol,
         network,
-        decimals: defaultDecimals(network, null),
+        decimals,
         contractAddress: null,
       },
       select: { id: true },
@@ -206,9 +215,19 @@ async function upsertAsset(
 
   const existing = await tx.asset.findUnique({
     where: { network_contractAddress: { network, contractAddress } },
-    select: { id: true },
+    select: { id: true, decimals: true, symbol: true },
   });
   if (existing) {
+    // Atualiza decimals/symbol se o provider trouxe valores melhores.
+    if (
+      providerDecimals !== undefined &&
+      (existing.decimals !== providerDecimals || (symbol && symbol !== existing.symbol))
+    ) {
+      await tx.asset.update({
+        where: { id: existing.id },
+        data: { decimals: providerDecimals, symbol, name: symbol },
+      });
+    }
     return existing.id;
   }
 
@@ -217,7 +236,7 @@ async function upsertAsset(
       symbol,
       name: symbol,
       network,
-      decimals: defaultDecimals(network, contractAddress),
+      decimals,
       contractAddress,
     },
     select: { id: true },

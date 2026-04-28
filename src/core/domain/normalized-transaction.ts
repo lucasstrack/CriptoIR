@@ -5,6 +5,13 @@ export type NormalizedTransfer = {
   fromAddress?: string | null;
   toAddress?: string | null;
   direction: 'IN' | 'OUT' | 'SELF' | 'UNKNOWN';
+  /**
+   * Decimals do asset segundo o provider (quando conhecidos). O persister usa
+   * isso para criar/atualizar Asset com decimals reais — SPL tokens variam
+   * (USDC=6, BONK=5, jupSOL=9), portanto sem este campo o `defaultDecimals`
+   * cai num chute de 18 que e errado para a maioria dos tokens.
+   */
+  decimals?: number;
 };
 
 export type NormalizedFee = {
