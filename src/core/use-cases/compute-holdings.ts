@@ -42,10 +42,9 @@ type HoldingComputation = {
 const ZERO = BigInt(0);
 const DECIMAL_STRING_PATTERN = /^-?\d+(\.\d+)?$/;
 
-// Cache em memoria (por processo) para precos atuais. Chave: symbol (tupla
-// coingeckoId+currency colapsa em 1 entry porque getCurrentPrice devolve USD e BRL
-// juntos). TTL configuravel via env; default 60s. So cacheia sucesso — erro nao
-// contamina proxima chamada.
+// Cache em memoria (por processo) para precos atuais. Chave: coingeckoId (USD e BRL
+// chegam juntos em uma unica chamada getPriceById). TTL configuravel via env;
+// default 60s. So cacheia sucesso — erro nao contamina proxima chamada.
 const DEFAULT_PRICE_CACHE_TTL_MS = 60_000;
 
 type CachedPrice = {
