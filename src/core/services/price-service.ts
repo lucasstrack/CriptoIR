@@ -24,4 +24,15 @@ export class PriceService {
       priceBrl: price.brl.toFixed(8),
     };
   }
+
+  async getPriceById(coingeckoId: string): Promise<{ priceUsd: string; priceBrl: string }> {
+    const price = await this.client.getSimplePrice(coingeckoId);
+    if (!price?.usd || !price?.brl) {
+      throw new Error(`Preco indisponivel para ${coingeckoId}.`);
+    }
+    return {
+      priceUsd: price.usd.toFixed(8),
+      priceBrl: price.brl.toFixed(8),
+    };
+  }
 }

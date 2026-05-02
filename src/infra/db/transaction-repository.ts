@@ -118,9 +118,10 @@ export class TransactionRepository {
             transfer.assetSymbol,
             transfer.assetAddress ?? null,
             transfer.decimals,
+            transfer.coingeckoId,
           );
           const feeAssetId = entry.normalized.fee
-            ? await upsertAsset(tx, network, entry.normalized.fee.assetSymbol, null, undefined)
+            ? await upsertAsset(tx, network, entry.normalized.fee.assetSymbol, null, undefined, undefined)
             : null;
 
           await tx.transaction.create({
@@ -188,15 +189,19 @@ async function upsertAsset(
   symbol: string,
   contractAddress: string | null,
   providerDecimals: number | undefined,
+  coingeckoId?: string | null,
 ): Promise<string> {
   const decimals = providerDecimals ?? defaultDecimals(network, contractAddress);
 
   if (contractAddress === null) {
     const existing = await tx.asset.findFirst({
       where: { network, contractAddress: null, symbol },
-      select: { id: true },
+      select: { id: true, coingeckoId: true },
     });
     if (existing) {
+      if (coingeckoId != null && existing.coingeckoId !== coingeckoId) {
+        await tx.asset.update({ where: { id: existing.id }, data: { coingeckoId } });
+      }
       return existing.id;
     }
 
@@ -207,6 +212,7 @@ async function upsertAsset(
         network,
         decimals,
         contractAddress: null,
+        coingeckoId: coingeckoId ?? null,
       },
       select: { id: true },
     });
@@ -215,18 +221,20 @@ async function upsertAsset(
 
   const existing = await tx.asset.findUnique({
     where: { network_contractAddress: { network, contractAddress } },
-    select: { id: true, decimals: true, symbol: true },
+    select: { id: true, decimals: true, symbol: true, coingeckoId: true },
   });
   if (existing) {
-    // Atualiza decimals/symbol se o provider trouxe valores melhores.
-    if (
-      providerDecimals !== undefined &&
-      (existing.decimals !== providerDecimals || (symbol && symbol !== existing.symbol))
-    ) {
-      await tx.asset.update({
-        where: { id: existing.id },
-        data: { decimals: providerDecimals, symbol, name: symbol },
-      });
+    const updateData: Prisma.AssetUpdateInput = {};
+    if (providerDecimals !== undefined && (existing.decimals !== providerDecimals || symbol !== existing.symbol)) {
+      updateData.decimals = providerDecimals;
+      updateData.symbol = symbol;
+      updateData.name = symbol;
+    }
+    if (coingeckoId != null && existing.coingeckoId !== coingeckoId) {
+      updateData.coingeckoId = coingeckoId;
+    }
+    if (Object.keys(updateData).length > 0) {
+      await tx.asset.update({ where: { id: existing.id }, data: updateData });
     }
     return existing.id;
   }
@@ -238,6 +246,7 @@ async function upsertAsset(
       network,
       decimals,
       contractAddress,
+      coingeckoId: coingeckoId ?? null,
     },
     select: { id: true },
   });

@@ -12,6 +12,8 @@ export type NormalizedTransfer = {
    * cai num chute de 18 que e errado para a maioria dos tokens.
    */
   decimals?: number;
+  /** ID CoinGecko do asset, quando conhecido pelo provider. Propagado ao DB para lookup de precos generico. */
+  coingeckoId?: string | null;
 };
 
 export type NormalizedFee = {

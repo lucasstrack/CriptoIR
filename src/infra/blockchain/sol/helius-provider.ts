@@ -148,6 +148,7 @@ export class HeliusSolProvider implements BlockchainProvider {
         toAddress: tt.toUserAccount || null,
         direction,
         decimals: meta.decimals,
+        coingeckoId: meta.coingeckoId,
       });
     }
 
@@ -172,6 +173,7 @@ export class HeliusSolProvider implements BlockchainProvider {
         toAddress: nt.toUserAccount || null,
         direction,
         decimals: 9,
+        coingeckoId: 'solana',
       });
     }
 

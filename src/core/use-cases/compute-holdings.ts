@@ -22,6 +22,7 @@ export type HoldingDTO = {
     network: Network;
     contractAddress: string | null;
     decimals: number;
+    coingeckoId: string | null;
   };
   amount: string;
   averagePriceUsd: string | null;
@@ -134,6 +135,7 @@ export class ComputeHoldingsUseCase {
             network: tx.asset.network,
             contractAddress: tx.asset.contractAddress,
             decimals: tx.asset.decimals,
+            coingeckoId: tx.asset.coingeckoId,
           },
         };
 
@@ -164,7 +166,7 @@ export class ComputeHoldingsUseCase {
       const { averagePriceUsd, averagePriceBrl } = this.averageCostService.compute(
         computation.acquisitions,
       );
-      const price = await safeFetchPrice(this.priceService, computation.asset.symbol);
+      const price = await safeFetchPrice(this.priceService, computation.asset);
 
       const amountStr = formatDecimal(computation.netAmount);
       const valueUsd =
@@ -214,20 +216,25 @@ function resolveHistoricalPrice(
 
 async function safeFetchPrice(
   priceService: PriceService,
-  symbol: string,
+  asset: { coingeckoId: string | null; symbol: string },
 ): Promise<{ priceUsd: string; priceBrl: string } | null> {
-  if (!(symbol in COINGECKO_ASSET_MAP)) {
+  const coingeckoId =
+    asset.coingeckoId ??
+    (asset.symbol in COINGECKO_ASSET_MAP
+      ? COINGECKO_ASSET_MAP[asset.symbol as SupportedPricedAsset]
+      : null);
+  if (!coingeckoId) {
     return null;
   }
   const now = nowProvider();
-  const cached = priceCache.get(symbol);
+  const cached = priceCache.get(coingeckoId);
   if (cached && cached.expiresAt > now) {
     return { priceUsd: cached.priceUsd, priceBrl: cached.priceBrl };
   }
   try {
-    const price = await priceService.getCurrentPrice(symbol as SupportedPricedAsset);
+    const price = await priceService.getPriceById(coingeckoId);
     const ttl = getPriceCacheTtlMs();
-    priceCache.set(symbol, {
+    priceCache.set(coingeckoId, {
       priceUsd: price.priceUsd,
       priceBrl: price.priceBrl,
       expiresAt: now + ttl,

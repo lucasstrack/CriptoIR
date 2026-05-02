@@ -68,12 +68,12 @@ function buildUseCaseWithMockedPrices(
   prices: Record<string, { priceUsd: string; priceBrl: string } | 'fail'>,
 ) {
   const mockService = {
-    getCurrentPrice: vi.fn(async (symbol: string) => {
-      const value = prices[symbol];
+    getPriceById: vi.fn(async (coingeckoId: string) => {
+      const value = prices[coingeckoId];
       if (!value || value === 'fail') {
-        throw new Error(`no price for ${symbol}`);
+        throw new Error(`no price for ${coingeckoId}`);
       }
-      return { assetSymbol: symbol, priceUsd: value.priceUsd, priceBrl: value.priceBrl };
+      return { priceUsd: value.priceUsd, priceBrl: value.priceBrl };
     }),
   } as unknown as PriceService;
   return new RecordPortfolioSnapshotUseCase(mockService);
@@ -121,7 +121,7 @@ describe('RecordPortfolioSnapshotUseCase', () => {
     });
 
     const useCase = buildUseCaseWithMockedPrices({
-      ETH: { priceUsd: '3000', priceBrl: '15000' },
+      ethereum: { priceUsd: '3000', priceBrl: '15000' },
     });
     const result = await useCase.execute({
       referenceDate: new Date('2026-04-19T12:00:00.000Z'),
@@ -165,7 +165,7 @@ describe('RecordPortfolioSnapshotUseCase', () => {
     });
 
     const useCase = buildUseCaseWithMockedPrices({
-      ETH: { priceUsd: '100', priceBrl: '500' },
+      ethereum: { priceUsd: '100', priceBrl: '500' },
     });
     const reference = new Date('2026-04-19T00:00:00.000Z');
 
@@ -297,7 +297,7 @@ describe('RecordPortfolioSnapshotUseCase', () => {
     });
 
     const useCase = buildUseCaseWithMockedPrices({
-      ETH: { priceUsd: '10', priceBrl: '50' },
+      ethereum: { priceUsd: '10', priceBrl: '50' },
     });
     const result = await useCase.execute({
       referenceDate: new Date('2026-04-12T00:00:00.000Z'),
@@ -335,7 +335,7 @@ describe('RecordPortfolioSnapshotUseCase', () => {
     });
 
     const useCase = buildUseCaseWithMockedPrices({
-      ETH: { priceUsd: '1', priceBrl: '1' },
+      ethereum: { priceUsd: '1', priceBrl: '1' },
     });
     const result = await useCase.execute({
       referenceDate: new Date('2026-04-12T00:00:00.000Z'),
@@ -361,7 +361,7 @@ describe('RecordPortfolioSnapshotUseCase', () => {
     });
 
     const useCase = buildUseCaseWithMockedPrices({
-      ETH: { priceUsd: '100', priceBrl: '500' },
+      ethereum: { priceUsd: '100', priceBrl: '500' },
     });
     await useCase.execute({
       referenceDate: new Date('2026-04-19T00:00:00.000Z'),

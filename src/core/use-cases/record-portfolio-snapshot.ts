@@ -30,6 +30,7 @@ export type RecordPortfolioSnapshotResult = {
 export type PriceResolver = (input: {
   assetId: string;
   symbol: string;
+  coingeckoId: string | null;
   at: Date;
 }) => Promise<{ priceUsd: string; priceBrl: string } | null>;
 
@@ -86,7 +87,7 @@ export class RecordPortfolioSnapshotUseCase {
 
     const resolvePrice: PriceResolver = useHistoricalPrice
       ? (input) => this.resolveHistoricalPrice(input.assetId, input.at)
-      : (input) => this.resolveCurrentPrice(input.symbol);
+      : (input) => this.resolveCurrentPrice(input);
 
     const breakdown = await this.computeBreakdown({ weekStart, resolvePrice });
 
@@ -161,7 +162,7 @@ export class RecordPortfolioSnapshotUseCase {
 
     const byAsset = new Map<
       string,
-      { netAmount: bigint; symbol: string }
+      { netAmount: bigint; symbol: string; coingeckoId: string | null }
     >();
 
     for (const tx of transactions) {
@@ -171,6 +172,7 @@ export class RecordPortfolioSnapshotUseCase {
       const current = byAsset.get(tx.assetId) ?? {
         netAmount: ZERO,
         symbol: tx.asset.symbol,
+        coingeckoId: tx.asset.coingeckoId,
       };
       const amount = parseDecimal(tx.amount);
       if (tx.direction === 'IN') {
@@ -190,6 +192,7 @@ export class RecordPortfolioSnapshotUseCase {
       const price = await resolvePrice({
         assetId,
         symbol: computation.symbol,
+        coingeckoId: computation.coingeckoId,
         at: weekStart,
       });
       const valueUsd =
@@ -230,16 +233,18 @@ export class RecordPortfolioSnapshotUseCase {
   }
 
   private async resolveCurrentPrice(
-    symbol: string,
+    asset: { symbol: string; coingeckoId: string | null },
   ): Promise<{ priceUsd: string; priceBrl: string } | null> {
-    if (!(symbol in COINGECKO_ASSET_MAP)) {
+    const id =
+      asset.coingeckoId ??
+      (asset.symbol in COINGECKO_ASSET_MAP
+        ? COINGECKO_ASSET_MAP[asset.symbol as SupportedPricedAsset]
+        : null);
+    if (!id) {
       return null;
     }
     try {
-      const price = await this.priceService.getCurrentPrice(
-        symbol as SupportedPricedAsset,
-      );
-      return { priceUsd: price.priceUsd, priceBrl: price.priceBrl };
+      return await this.priceService.getPriceById(id);
     } catch {
       return null;
     }

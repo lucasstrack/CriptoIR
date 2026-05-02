@@ -70,15 +70,15 @@ function buildUseCaseWithMockedPrices(
   prices: Record<string, { priceUsd: string; priceBrl: string } | 'fail'>,
 ) {
   const mockService = {
-    getCurrentPrice: vi.fn(async (symbol: string) => {
-      const value = prices[symbol];
+    getPriceById: vi.fn(async (coingeckoId: string) => {
+      const value = prices[coingeckoId];
       if (!value) {
-        throw new Error(`no price for ${symbol}`);
+        throw new Error(`no price for ${coingeckoId}`);
       }
       if (value === 'fail') {
         throw new Error('provider down');
       }
-      return { assetSymbol: symbol, priceUsd: value.priceUsd, priceBrl: value.priceBrl };
+      return { priceUsd: value.priceUsd, priceBrl: value.priceBrl };
     }),
   } as unknown as PriceService;
   return new ComputeHoldingsUseCase(mockService);
@@ -165,8 +165,8 @@ describe('GET /api/holdings', () => {
 
     __setComputeHoldingsUseCaseForTests(
       buildUseCaseWithMockedPrices({
-        ETH: { priceUsd: '4000', priceBrl: '20000' },
-        USDC: { priceUsd: '1', priceBrl: '5' },
+        ethereum: { priceUsd: '4000', priceBrl: '20000' },
+        'usd-coin': { priceUsd: '1', priceBrl: '5' },
       }),
     );
 
@@ -231,7 +231,7 @@ describe('GET /api/holdings', () => {
 
     __setComputeHoldingsUseCaseForTests(
       buildUseCaseWithMockedPrices({
-        ETH: { priceUsd: '1', priceBrl: '1' },
+        ethereum: { priceUsd: '1', priceBrl: '1' },
       }),
     );
 
@@ -257,7 +257,7 @@ describe('GET /api/holdings', () => {
     });
 
     __setComputeHoldingsUseCaseForTests(
-      buildUseCaseWithMockedPrices({ ETH: 'fail' }),
+      buildUseCaseWithMockedPrices({ ethereum: 'fail' }),
     );
 
     const response = await GET();
@@ -329,7 +329,7 @@ describe('GET /api/holdings', () => {
     });
 
     __setComputeHoldingsUseCaseForTests(
-      buildUseCaseWithMockedPrices({ ETH: { priceUsd: '300', priceBrl: '1500' } }),
+      buildUseCaseWithMockedPrices({ ethereum: { priceUsd: '300', priceBrl: '1500' } }),
     );
 
     const response = await GET();
@@ -357,7 +357,7 @@ describe('GET /api/holdings', () => {
     });
 
     __setComputeHoldingsUseCaseForTests(
-      buildUseCaseWithMockedPrices({ ETH: { priceUsd: '1000', priceBrl: '5000' } }),
+      buildUseCaseWithMockedPrices({ ethereum: { priceUsd: '1000', priceBrl: '5000' } }),
     );
 
     const response = await GET();
@@ -386,12 +386,11 @@ describe('GET /api/holdings', () => {
       amount: '1',
     });
 
-    const getCurrentPrice = vi.fn(async (symbol: string) => ({
-      assetSymbol: symbol,
+    const getPriceById = vi.fn(async () => ({
       priceUsd: '4000',
       priceBrl: '20000',
     }));
-    const mockService = { getCurrentPrice } as unknown as PriceService;
+    const mockService = { getPriceById } as unknown as PriceService;
 
     // Controle explicito de tempo via hook DI.
     let now = 1_000_000;
@@ -402,19 +401,19 @@ describe('GET /api/holdings', () => {
     // Primeira chamada: cache miss -> bate no PriceService.
     const r1 = await GET();
     expect(r1.status).toBe(200);
-    expect(getCurrentPrice).toHaveBeenCalledTimes(1);
+    expect(getPriceById).toHaveBeenCalledTimes(1);
 
     // Avanca 30s (< 60s default TTL): cache hit -> nao bate no PriceService.
     now += 30_000;
     const r2 = await GET();
     expect(r2.status).toBe(200);
-    expect(getCurrentPrice).toHaveBeenCalledTimes(1);
+    expect(getPriceById).toHaveBeenCalledTimes(1);
 
     // Avanca mais 31s (total 61s > TTL): cache expirou -> bate de novo.
     now += 31_000;
     const r3 = await GET();
     expect(r3.status).toBe(200);
-    expect(getCurrentPrice).toHaveBeenCalledTimes(2);
+    expect(getPriceById).toHaveBeenCalledTimes(2);
 
     __setNowProviderForTests(null);
   });
@@ -433,13 +432,13 @@ describe('GET /api/holdings', () => {
     });
 
     let shouldFail = true;
-    const getCurrentPrice = vi.fn(async (symbol: string) => {
+    const getPriceById = vi.fn(async () => {
       if (shouldFail) {
         throw new Error('provider down');
       }
-      return { assetSymbol: symbol, priceUsd: '4000', priceBrl: '20000' };
+      return { priceUsd: '4000', priceBrl: '20000' };
     });
-    const mockService = { getCurrentPrice } as unknown as PriceService;
+    const mockService = { getPriceById } as unknown as PriceService;
 
     __resetPriceCacheForTests();
     __setComputeHoldingsUseCaseForTests(new ComputeHoldingsUseCase(mockService));
@@ -448,14 +447,14 @@ describe('GET /api/holdings', () => {
     const r1 = await GET();
     const p1 = await r1.json();
     expect(p1.data[0].priceUsd).toBeNull();
-    expect(getCurrentPrice).toHaveBeenCalledTimes(1);
+    expect(getPriceById).toHaveBeenCalledTimes(1);
 
     // Provider volta — proxima chamada tenta de novo e deve suceder.
     shouldFail = false;
     const r2 = await GET();
     const p2 = await r2.json();
     expect(p2.data[0].priceUsd).toBe('4000');
-    expect(getCurrentPrice).toHaveBeenCalledTimes(2);
+    expect(getPriceById).toHaveBeenCalledTimes(2);
   });
 
   it('exclui da lista assets com saldo zero ou negativo', async () => {
@@ -519,7 +518,7 @@ describe('GET /api/holdings', () => {
     });
 
     __setComputeHoldingsUseCaseForTests(
-      buildUseCaseWithMockedPrices({ ETH: { priceUsd: '1000', priceBrl: '5000' } }),
+      buildUseCaseWithMockedPrices({ ethereum: { priceUsd: '1000', priceBrl: '5000' } }),
     );
 
     const response = await GET();
