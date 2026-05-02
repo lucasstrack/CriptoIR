@@ -27,6 +27,7 @@ export function ensureTestSchema() {
   const databaseUrl = resolveDatabaseUrl();
   const databaseFile = databasePathFromUrl(databaseUrl);
 
+  process.env.DATABASE_URL = databaseUrl;
   fs.mkdirSync(path.dirname(databaseFile), { recursive: true });
 
   if (!fs.existsSync(databaseFile) || fs.statSync(databaseFile).size === 0) {
