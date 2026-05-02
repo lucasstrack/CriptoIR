@@ -15,7 +15,13 @@ import { prisma } from '@/infra/db/prisma';
 import { ensureTestSchema } from '@/../tests/integration/helpers/ensure-test-schema';
 
 type WalletRecord = { id: string; label: string; address: string; network: Network };
-type AssetRecord = { id: string; symbol: string; network: Network };
+type AssetRecord = {
+  id: string;
+  symbol: string;
+  network: Network;
+  contractAddress: string | null;
+  coingeckoId: string | null;
+};
 
 async function createWallet(label: string, address: string, network: Network): Promise<WalletRecord> {
   return prisma.wallet.create({
@@ -27,12 +33,35 @@ async function createWallet(label: string, address: string, network: Network): P
 async function ensureAsset(symbol: string, network: Network): Promise<AssetRecord> {
   const existing = await prisma.asset.findFirst({
     where: { symbol, network, contractAddress: null },
-    select: { id: true, symbol: true, network: true },
+    select: { id: true, symbol: true, network: true, contractAddress: true, coingeckoId: true },
   });
   if (existing) return existing;
   return prisma.asset.create({
     data: { symbol, name: symbol, network, decimals: 18, contractAddress: null },
-    select: { id: true, symbol: true, network: true },
+    select: { id: true, symbol: true, network: true, contractAddress: true, coingeckoId: true },
+  });
+}
+
+async function ensureTokenAsset(
+  symbol: string,
+  network: Network,
+  contractAddress: string,
+): Promise<AssetRecord> {
+  const existing = await prisma.asset.findUnique({
+    where: { network_contractAddress: { network, contractAddress } },
+    select: { id: true, symbol: true, network: true, contractAddress: true, coingeckoId: true },
+  });
+  if (existing) return existing;
+  return prisma.asset.create({
+    data: {
+      symbol,
+      name: symbol,
+      network,
+      decimals: 18,
+      contractAddress,
+      coingeckoId: null,
+    },
+    select: { id: true, symbol: true, network: true, contractAddress: true, coingeckoId: true },
   });
 }
 
@@ -80,6 +109,19 @@ function buildUseCaseWithMockedPrices(
       }
       return { priceUsd: value.priceUsd, priceBrl: value.priceBrl };
     }),
+    getPriceForAsset: vi.fn(async (asset: AssetRecord) => {
+      const key = asset.contractAddress
+        ? `${asset.network}:${asset.contractAddress.toLowerCase()}`
+        : asset.coingeckoId ?? (asset.network === 'BTC' ? 'bitcoin' : asset.network === 'SOL' ? 'solana' : 'ethereum');
+      const value = prices[key];
+      if (!value) {
+        throw new Error(`no price for ${key}`);
+      }
+      if (value === 'fail') {
+        throw new Error('provider down');
+      }
+      return { priceUsd: value.priceUsd, priceBrl: value.priceBrl };
+    }),
   } as unknown as PriceService;
   return new ComputeHoldingsUseCase(mockService);
 }
@@ -114,7 +156,11 @@ describe('GET /api/holdings', () => {
   it('agrega IN - OUT por asset e calcula valor atual em USD/BRL', async () => {
     const wallet = await createWallet('W', '0xw', 'ETH');
     const eth = await ensureAsset('ETH', 'ETH');
-    const usdc = await ensureAsset('USDC', 'ETH');
+    const usdc = await ensureTokenAsset(
+      'USDC',
+      'ETH',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    );
 
     await seedTx({
       wallet,
@@ -166,7 +212,10 @@ describe('GET /api/holdings', () => {
     __setComputeHoldingsUseCaseForTests(
       buildUseCaseWithMockedPrices({
         ethereum: { priceUsd: '4000', priceBrl: '20000' },
-        'usd-coin': { priceUsd: '1', priceBrl: '5' },
+        'ETH:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': {
+          priceUsd: '1',
+          priceBrl: '5',
+        },
       }),
     );
 
@@ -271,6 +320,39 @@ describe('GET /api/holdings', () => {
       priceBrl: null,
       valueUsd: null,
       valueBrl: null,
+    });
+  });
+
+  it('busca preco pelo ativo especifico quando token tem contrato e simbolo ambiguo', async () => {
+    const wallet = await createWallet('W', '0xw', 'ETH');
+    const usx = await ensureTokenAsset('USX', 'ETH', '0xabc0000000000000000000000000000000000000');
+    await seedTx({
+      wallet,
+      asset: usx,
+      txHash: '0xusx',
+      timestamp: '2026-03-01T00:00:00.000Z',
+      type: 'TRANSFER_IN',
+      direction: 'IN',
+      amount: '10',
+    });
+
+    const useCase = buildUseCaseWithMockedPrices({
+      'ETH:0xabc0000000000000000000000000000000000000': {
+        priceUsd: '0.25',
+        priceBrl: '1.25',
+      },
+    });
+    __setComputeHoldingsUseCaseForTests(useCase);
+
+    const response = await GET();
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.data[0]).toMatchObject({
+      priceUsd: '0.25',
+      priceBrl: '1.25',
+      valueUsd: '2.500000000000000000',
+      valueBrl: '12.500000000000000000',
     });
   });
 
@@ -386,11 +468,11 @@ describe('GET /api/holdings', () => {
       amount: '1',
     });
 
-    const getPriceById = vi.fn(async () => ({
+    const getPriceForAsset = vi.fn(async () => ({
       priceUsd: '4000',
       priceBrl: '20000',
     }));
-    const mockService = { getPriceById } as unknown as PriceService;
+    const mockService = { getPriceForAsset } as unknown as PriceService;
 
     // Controle explicito de tempo via hook DI.
     let now = 1_000_000;
@@ -401,19 +483,19 @@ describe('GET /api/holdings', () => {
     // Primeira chamada: cache miss -> bate no PriceService.
     const r1 = await GET();
     expect(r1.status).toBe(200);
-    expect(getPriceById).toHaveBeenCalledTimes(1);
+    expect(getPriceForAsset).toHaveBeenCalledTimes(1);
 
     // Avanca 30s (< 60s default TTL): cache hit -> nao bate no PriceService.
     now += 30_000;
     const r2 = await GET();
     expect(r2.status).toBe(200);
-    expect(getPriceById).toHaveBeenCalledTimes(1);
+    expect(getPriceForAsset).toHaveBeenCalledTimes(1);
 
     // Avanca mais 31s (total 61s > TTL): cache expirou -> bate de novo.
     now += 31_000;
     const r3 = await GET();
     expect(r3.status).toBe(200);
-    expect(getPriceById).toHaveBeenCalledTimes(2);
+    expect(getPriceForAsset).toHaveBeenCalledTimes(2);
 
     __setNowProviderForTests(null);
   });
@@ -432,13 +514,13 @@ describe('GET /api/holdings', () => {
     });
 
     let shouldFail = true;
-    const getPriceById = vi.fn(async () => {
+    const getPriceForAsset = vi.fn(async () => {
       if (shouldFail) {
         throw new Error('provider down');
       }
       return { priceUsd: '4000', priceBrl: '20000' };
     });
-    const mockService = { getPriceById } as unknown as PriceService;
+    const mockService = { getPriceForAsset } as unknown as PriceService;
 
     __resetPriceCacheForTests();
     __setComputeHoldingsUseCaseForTests(new ComputeHoldingsUseCase(mockService));
@@ -447,14 +529,14 @@ describe('GET /api/holdings', () => {
     const r1 = await GET();
     const p1 = await r1.json();
     expect(p1.data[0].priceUsd).toBeNull();
-    expect(getPriceById).toHaveBeenCalledTimes(1);
+    expect(getPriceForAsset).toHaveBeenCalledTimes(1);
 
     // Provider volta — proxima chamada tenta de novo e deve suceder.
     shouldFail = false;
     const r2 = await GET();
     const p2 = await r2.json();
     expect(p2.data[0].priceUsd).toBe('4000');
-    expect(getPriceById).toHaveBeenCalledTimes(2);
+    expect(getPriceForAsset).toHaveBeenCalledTimes(2);
   });
 
   it('exclui da lista assets com saldo zero ou negativo', async () => {

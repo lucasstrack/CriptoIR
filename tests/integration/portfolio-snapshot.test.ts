@@ -9,7 +9,13 @@ import { prisma } from '@/infra/db/prisma';
 import { ensureTestSchema } from '@/../tests/integration/helpers/ensure-test-schema';
 
 type WalletRecord = { id: string; label: string; address: string; network: Network };
-type AssetRecord = { id: string; symbol: string; network: Network };
+type AssetRecord = {
+  id: string;
+  symbol: string;
+  network: Network;
+  contractAddress: string | null;
+  coingeckoId: string | null;
+};
 
 async function createWallet(
   label: string,
@@ -25,12 +31,12 @@ async function createWallet(
 async function ensureAsset(symbol: string, network: Network): Promise<AssetRecord> {
   const existing = await prisma.asset.findFirst({
     where: { symbol, network, contractAddress: null },
-    select: { id: true, symbol: true, network: true },
+    select: { id: true, symbol: true, network: true, contractAddress: true, coingeckoId: true },
   });
   if (existing) return existing;
   return prisma.asset.create({
     data: { symbol, name: symbol, network, decimals: 18, contractAddress: null },
-    select: { id: true, symbol: true, network: true },
+    select: { id: true, symbol: true, network: true, contractAddress: true, coingeckoId: true },
   });
 }
 
@@ -72,6 +78,16 @@ function buildUseCaseWithMockedPrices(
       const value = prices[coingeckoId];
       if (!value || value === 'fail') {
         throw new Error(`no price for ${coingeckoId}`);
+      }
+      return { priceUsd: value.priceUsd, priceBrl: value.priceBrl };
+    }),
+    getPriceForAsset: vi.fn(async (asset: AssetRecord) => {
+      const key = asset.contractAddress
+        ? `${asset.network}:${asset.contractAddress.toLowerCase()}`
+        : asset.coingeckoId ?? (asset.network === 'BTC' ? 'bitcoin' : asset.network === 'SOL' ? 'solana' : 'ethereum');
+      const value = prices[key];
+      if (!value || value === 'fail') {
+        throw new Error(`no price for ${key}`);
       }
       return { priceUsd: value.priceUsd, priceBrl: value.priceBrl };
     }),

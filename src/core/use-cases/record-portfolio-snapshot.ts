@@ -6,10 +6,7 @@ import {
 } from '@/core/services/average-cost';
 import { PriceService } from '@/core/services/price-service';
 import { CoinGeckoClient } from '@/infra/prices/coingecko-client';
-import {
-  COINGECKO_ASSET_MAP,
-  type SupportedPricedAsset,
-} from '@/infra/prices/coingecko-asset-map';
+import type { Network } from '@prisma/client';
 
 export type PortfolioSnapshotBreakdownEntry = {
   assetId: string;
@@ -30,6 +27,8 @@ export type RecordPortfolioSnapshotResult = {
 export type PriceResolver = (input: {
   assetId: string;
   symbol: string;
+  network: Network;
+  contractAddress: string | null;
   coingeckoId: string | null;
   at: Date;
 }) => Promise<{ priceUsd: string; priceBrl: string } | null>;
@@ -162,7 +161,13 @@ export class RecordPortfolioSnapshotUseCase {
 
     const byAsset = new Map<
       string,
-      { netAmount: bigint; symbol: string; coingeckoId: string | null }
+      {
+        netAmount: bigint;
+        symbol: string;
+        network: Network;
+        contractAddress: string | null;
+        coingeckoId: string | null;
+      }
     >();
 
     for (const tx of transactions) {
@@ -172,6 +177,8 @@ export class RecordPortfolioSnapshotUseCase {
       const current = byAsset.get(tx.assetId) ?? {
         netAmount: ZERO,
         symbol: tx.asset.symbol,
+        network: tx.asset.network,
+        contractAddress: tx.asset.contractAddress,
         coingeckoId: tx.asset.coingeckoId,
       };
       const amount = parseDecimal(tx.amount);
@@ -192,6 +199,8 @@ export class RecordPortfolioSnapshotUseCase {
       const price = await resolvePrice({
         assetId,
         symbol: computation.symbol,
+        network: computation.network,
+        contractAddress: computation.contractAddress,
         coingeckoId: computation.coingeckoId,
         at: weekStart,
       });
@@ -233,18 +242,15 @@ export class RecordPortfolioSnapshotUseCase {
   }
 
   private async resolveCurrentPrice(
-    asset: { symbol: string; coingeckoId: string | null },
+    asset: {
+      symbol: string;
+      network: Network;
+      contractAddress: string | null;
+      coingeckoId: string | null;
+    },
   ): Promise<{ priceUsd: string; priceBrl: string } | null> {
-    const id =
-      asset.coingeckoId ??
-      (asset.symbol in COINGECKO_ASSET_MAP
-        ? COINGECKO_ASSET_MAP[asset.symbol as SupportedPricedAsset]
-        : null);
-    if (!id) {
-      return null;
-    }
     try {
-      return await this.priceService.getPriceById(id);
+      return await this.priceService.getPriceForAsset(asset);
     } catch {
       return null;
     }

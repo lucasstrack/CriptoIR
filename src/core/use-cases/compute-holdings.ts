@@ -7,12 +7,8 @@ import {
   parseDecimal,
   formatDecimal,
 } from '@/core/services/average-cost';
-import { PriceService } from '@/core/services/price-service';
+import { PriceService, type PriceableAsset } from '@/core/services/price-service';
 import { CoinGeckoClient } from '@/infra/prices/coingecko-client';
-import {
-  COINGECKO_ASSET_MAP,
-  type SupportedPricedAsset,
-} from '@/infra/prices/coingecko-asset-map';
 
 export type HoldingDTO = {
   asset: {
@@ -42,8 +38,8 @@ type HoldingComputation = {
 const ZERO = BigInt(0);
 const DECIMAL_STRING_PATTERN = /^-?\d+(\.\d+)?$/;
 
-// Cache em memoria (por processo) para precos atuais. Chave: coingeckoId (USD e BRL
-// chegam juntos em uma unica chamada getPriceById). TTL configuravel via env;
+// Cache em memoria (por processo) para precos atuais. Chave: ativo especifico
+// (network+contract quando houver, senao native/id). TTL configuravel via env;
 // default 60s. So cacheia sucesso — erro nao contamina proxima chamada.
 const DEFAULT_PRICE_CACHE_TTL_MS = 60_000;
 
@@ -215,25 +211,18 @@ function resolveHistoricalPrice(
 
 async function safeFetchPrice(
   priceService: PriceService,
-  asset: { coingeckoId: string | null; symbol: string },
+  asset: PriceableAsset,
 ): Promise<{ priceUsd: string; priceBrl: string } | null> {
-  const coingeckoId =
-    asset.coingeckoId ??
-    (asset.symbol in COINGECKO_ASSET_MAP
-      ? COINGECKO_ASSET_MAP[asset.symbol as SupportedPricedAsset]
-      : null);
-  if (!coingeckoId) {
-    return null;
-  }
+  const cacheKey = priceCacheKey(asset);
   const now = nowProvider();
-  const cached = priceCache.get(coingeckoId);
+  const cached = priceCache.get(cacheKey);
   if (cached && cached.expiresAt > now) {
     return { priceUsd: cached.priceUsd, priceBrl: cached.priceBrl };
   }
   try {
-    const price = await priceService.getPriceById(coingeckoId);
+    const price = await priceService.getPriceForAsset(asset);
     const ttl = getPriceCacheTtlMs();
-    priceCache.set(coingeckoId, {
+    priceCache.set(cacheKey, {
       priceUsd: price.priceUsd,
       priceBrl: price.priceBrl,
       expiresAt: now + ttl,
@@ -242,6 +231,13 @@ async function safeFetchPrice(
   } catch {
     return null;
   }
+}
+
+function priceCacheKey(asset: PriceableAsset): string {
+  if (asset.contractAddress) {
+    return `${asset.network}:${asset.contractAddress.toLowerCase()}`;
+  }
+  return `${asset.network}:native:${asset.coingeckoId ?? asset.symbol}`;
 }
 
 function multiplyDecimals(amount: bigint, priceStr: string): string {
