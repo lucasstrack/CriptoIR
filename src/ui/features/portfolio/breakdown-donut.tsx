@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { t } from '@/lib/i18n';
 import { formatCurrency, type CurrencyCode } from '@/lib/format-currency';
 import { useCurrency } from '@/ui/hooks/use-currency';
@@ -12,6 +12,7 @@ interface DonutSlice {
   assetId: string;
   symbol: string;
   value: number;
+  fill: string;
 }
 
 function toSlices(holdings: Holding[], currency: CurrencyCode): DonutSlice[] {
@@ -25,6 +26,7 @@ function toSlices(holdings: Holding[], currency: CurrencyCode): DonutSlice[] {
       assetId: holding.asset.id,
       symbol: holding.asset.symbol,
       value,
+      fill: CHART_COLORS[slices.length % CHART_COLORS.length],
     });
   }
   slices.sort((a, b) => b.value - a.value);
@@ -90,8 +92,8 @@ export function BreakdownDonut() {
       data-testid="breakdown-donut"
     >
       <div className="flex h-full w-full flex-col gap-4 md:flex-row">
-        <div className="h-full min-h-[200px] flex-1">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="min-h-[200px] flex-1">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <PieChart>
               <Tooltip content={<DonutTooltip currency={currency} total={total} />} />
               <Pie
@@ -102,14 +104,7 @@ export function BreakdownDonut() {
                 outerRadius="85%"
                 paddingAngle={1}
                 isAnimationActive={false}
-              >
-                {slices.map((slice, index) => (
-                  <Cell
-                    key={slice.assetId}
-                    fill={CHART_COLORS[index % CHART_COLORS.length]}
-                  />
-                ))}
-              </Pie>
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -117,7 +112,7 @@ export function BreakdownDonut() {
           data-testid="breakdown-legend"
           className="flex flex-col gap-1.5 overflow-y-auto text-xs md:w-48"
         >
-          {slices.map((slice, index) => {
+          {slices.map((slice) => {
             const percent = total > 0 ? (slice.value / total) * 100 : 0;
             return (
               <li
@@ -129,7 +124,7 @@ export function BreakdownDonut() {
                   <span
                     aria-hidden="true"
                     className="inline-block h-2.5 w-2.5 rounded-sm"
-                    style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                    style={{ backgroundColor: slice.fill }}
                   />
                   <span className="font-medium text-foreground">{slice.symbol}</span>
                 </span>
